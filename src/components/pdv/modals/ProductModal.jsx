@@ -199,13 +199,21 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
           </div>
 
           {/* ── Variants ── */}
-          {vars.length > 0 && (
-            <div className="pm-section">
-              <div className="pm-section-head">
-                <span className="pm-section-title">Elige el tamaño de tu pizza</span>
-                <span className="pm-badge pm-badge--req">Obligatorio</span>
-              </div>
-              <span className="pm-section-hint">Seleccione mínimo 1 opción</span>
+          {vars.length > 0 && (() => {
+            const firstVar = vars[0].name.toLowerCase()
+            let title = 'Elige una opción'
+            if (['porción', 'porcion', 'mediana', 'familiar', 'individual'].some(w => firstVar.includes(w))) {
+              title = 'Elige el tamaño de tu pizza'
+            } else if (firstVar.includes('gr') || firstVar.includes('kg') || firstVar.match(/\d+\s*(gr|kg)/)) {
+              title = 'Elige el tamaño de tu porción'
+            }
+            return (
+              <div className="pm-section">
+                <div className="pm-section-head">
+                  <span className="pm-section-title">{title}</span>
+                  <span className="pm-badge pm-badge--req">Obligatorio</span>
+                </div>
+                <span className="pm-section-hint">Seleccione mínimo 1 opción</span>
               <div className="pm-radio-list">
                 {vars.map((v, vi) => {
                   const sel = selectedVariant === vi
@@ -231,7 +239,8 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                 </p>
               )}
             </div>
-          )}
+            )
+          })()}
 
           {/* ── Modifier sections ── */}
           {mods.map((mod, mi) => {
