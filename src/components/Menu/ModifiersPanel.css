@@ -1,0 +1,341 @@
+/* ── GroupModal tabs ── */
+.gm-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin: -4px 0 16px;
+}
+.gm-tab {
+  padding: 8px 16px; background: none; border: none;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color .14s, border-color .14s; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.gm-tab:hover  { color: var(--text); }
+.gm-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.gm-tab-badge {
+  font-size: 10px; font-weight: 700;
+  background: var(--brand); color: #fff;
+  border-radius: 99px; padding: 1px 6px;
+  min-width: 16px; text-align: center;
+}
+
+/* ── Product assignment ── */
+.gm-prod-toolbar {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.gm-prod-search { flex: 1; }
+.gm-prod-count  { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+.gm-prod-list {
+  display: flex; flex-direction: column; gap: 12px;
+  max-height: 320px; overflow-y: auto;
+  padding-right: 2px;
+}
+.gm-prod-cat-name {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted);
+  padding: 4px 0; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+}
+.gm-prod-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius);
+  border: 1.5px solid var(--border); margin-bottom: 5px;
+  cursor: pointer; transition: border-color .12s, background .12s;
+  user-select: none;
+}
+.gm-prod-item:hover { border-color: var(--brand); background: #fef2f2; }
+.gm-prod-item input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: var(--brand); flex-shrink: 0;
+}
+.gm-prod-name  { font-size: 13px; font-weight: 500; color: var(--text); }
+.gm-prod-empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
+
+.mods-panel { padding: 4px 0; }
+
+.mods-panel-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+}
+
+.mods-panel-controls {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.mods-search {
+  width: 220px;
+}
+
+.mods-no-results {
+  text-align: center; padding: 40px 0;
+  color: var(--muted); font-size: 14px;
+}
+.mods-panel-title { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.mods-panel-sub   { color: var(--muted); font-size: 13px; }
+
+/* ── Group cards ── */
+.mod-group-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.mod-group-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.mod-group-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px 10px 8px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+/* drag handle a la izquierda del grupo */
+.mod-group-drag {
+  width: 28px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.mod-group-card-info { flex: 1; min-width: 0; }
+
+.mod-group-card-name { font-size: 15px; font-weight: 700; color: var(--text); }
+
+.mod-group-card-meta {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;
+}
+
+.mod-tag {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 9px; border-radius: 99px;
+  background: var(--surface3); color: var(--muted);
+  border: 1px solid var(--border);
+}
+.mod-tag--req { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.mod-tag--opt { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+
+.mod-group-card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.mod-collapse-btn { width: 28px; height: 28px; font-size: 11px; }
+.mod-del-btn {
+  background: transparent; color: var(--danger);
+  border: 1px solid currentColor;
+}
+.mod-del-btn:hover { background: var(--danger); color: #fff; opacity: 1; }
+
+/* ── Collapsible options ── */
+.mod-options-collapse {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 260ms ease;
+}
+.mod-options-collapse--open {
+  max-height: 600px;
+}
+
+/* ── Options list ── */
+.mod-options-list {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px;
+}
+
+.mod-opt-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 12px; font-size: 12px;
+}
+.mod-opt-chip-name  { font-weight: 600; color: var(--text); }
+.mod-opt-price      { color: var(--muted); }
+.mod-opt-orig       { color: var(--muted); text-decoration: line-through; font-size: 11px; }
+.mod-opt-promo      { color: var(--brand); font-weight: 700; }
+.mod-opt-chip--off  { opacity: 0.4; }
+
+/* ── Group modal ── */
+.mod-settings-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 16px;
+  padding: 12px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  margin-bottom: 14px;
+}
+
+.mod-check-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text); cursor: pointer; user-select: none;
+}
+.mod-check-label input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: var(--brand);
+}
+
+.mod-minmax {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--muted); margin-left: auto;
+}
+.mod-num-input { width: 64px !important; text-align: center; }
+
+.mod-options-section  { margin-bottom: 4px; }
+.mod-options-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.mod-options-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--muted);
+}
+.mod-options-legend {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 4px; margin-bottom: 4px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .4px;
+}
+/* .mod-option-row and .mod-option-row--off rules moved below */
+.mod-opt-num {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  width: 16px; text-align: center; flex-shrink: 0;
+}
+
+/* drag handle dentro de la fila de opción */
+.mod-opt-drag {
+  width: 24px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* eye toggle */
+.mod-eye-btn {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; width: 28px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .12s; cursor: pointer;
+}
+.mod-eye-btn:hover { border-color: var(--blue); color: var(--blue); }
+.mod-eye-btn--off  { color: var(--muted); opacity: 0.4; }
+.mod-eye-btn--off:hover { opacity: 1; }
+
+/* ── Price-by-variant in option chip ── */
+.mod-opt-price--varies {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* ── Option row structure ── */
+.mod-option-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* Dimmable zone — dims uniformly when option is inactive */
+.mod-opt-dimmable {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mod-opt-dimmable--off { opacity: 0.4; }
+
+.mod-opt-main-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Always-visible: eye + × */
+.mod-opt-always {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+/* "Por tamaño ↓/▶" toggle button when variant mode is active */
+.mod-opt-by-size-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blue);
+  white-space: nowrap;
+  flex: 1;
+  text-align: right;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .12s;
+}
+.mod-opt-by-size-btn:hover { opacity: .7; }
+
+/* Price mode toggle (Fijo / Tamaño) */
+.mod-price-mode-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mod-price-mode-toggle button {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .1s, color .1s;
+  white-space: nowrap;
+}
+.mod-price-mode-toggle button + button {
+  border-left: 1px solid var(--border);
+}
+.mod-price-mode-toggle button.active {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* Collapsible wrapper for variant price sub-row */
+.mod-opt-variant-collapse {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease;
+}
+.mod-opt-variant-collapse--open {
+  max-height: 300px;
+}
+
+/* Variant price sub-row */
+.mod-opt-variant-prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0 2px 48px; /* indent to align with name input */
+}
+
+.mod-opt-variant-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mod-opt-variant-lbl {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* reuse pm-price-wrap, pm-price-pfx, pm-price-inp, pm-variant-rm from ProductModal.css */
+.pm-price-wrap { position: relative; display: flex; align-items: center; }
+.pm-price-pfx  { position: absolute; left: 10px; color: var(--muted); font-weight: 600; font-size: 13px; pointer-events: none; z-index:1; }
+.pm-price-inp  { padding-left: 22px !important; }
+.pm-variant-rm {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  border-radius: 6px; width: 28px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0; transition: all .12s;
+}
+.pm-variant-rm:hover:not(:disabled) { background: var(--danger); color: #fff; border-color: var(--danger); }
+.pm-variant-rm:disabled { opacity: .25; cursor: not-allowed; }

@@ -1,0 +1,40 @@
+import { useState } from 'react'
+import { useAuth } from './context/AuthContext'
+import Sidebar from './components/Layout/Sidebar'
+import MenuPage from './components/Menu/MenuPage'
+import PedidosPDV from './pages/pdv/PedidosPDV'
+import HistorialPage from './pages/ventas/HistorialPage'
+import ReportesPage from './pages/ventas/ReportesPage'
+import ClientsPage from './pages/clientes/ClientsPage'
+import SettingsPage from './pages/settings/SettingsPage'
+import Login from './pages/Login'
+import './App.css'
+
+const PAGES = {
+  menu:      MenuPage,
+  pdv:       PedidosPDV,
+  historial: HistorialPage,
+  reportes:  ReportesPage,
+  clients:   ClientsPage,
+  settings:  SettingsPage,
+}
+
+export default function App() {
+  const { user } = useAuth()
+  const [activePage, setActivePage] = useState('menu')
+  
+  if (!user) {
+    return <Login />
+  }
+
+  const PageComponent = PAGES[activePage] ?? MenuPage
+
+  return (
+    <div className="app-layout">
+      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+      <main className="app-main">
+        <PageComponent />
+      </main>
+    </div>
+  )
+}

@@ -1,0 +1,117 @@
+.cat-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: opacity .2s, box-shadow .15s;
+}
+.cat-section:hover { box-shadow: var(--shadow-md); }
+/* Dim name, count badge and body — keep drag handle, toggle and action buttons at full opacity */
+.cat-section--off .cat-name,
+.cat-section--off .cat-count-badge,
+.cat-section--off .cat-body { opacity: 0.45; }
+
+/* ── Header ── */
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  min-height: 56px;
+}
+
+.cat-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: text;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cat-name:hover { color: var(--brand); }
+
+.cat-name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1.5px solid var(--brand);
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(192,57,43,.1);
+}
+
+.cat-count-badge {
+  background: var(--surface3);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cat-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cat-del-btn { color: var(--danger) !important; }
+.cat-del-btn:hover { background: var(--danger) !important; color: #fff !important; opacity: 1 !important; }
+
+.collapse-btn { font-size: 11px; }
+
+/* ── Body ── */
+.cat-body { padding: 0; }
+
+.cat-empty {
+  padding: 20px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.inline-link {
+  background: none; border: none;
+  color: var(--brand); font-size: inherit;
+  text-decoration: underline; padding: 0; font-weight: 600;
+}
+
+/* ── Products table ── */
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.products-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.products-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.products-table tbody tr:last-child td { border-bottom: none; }
+.products-table tbody tr:hover { background: var(--surface2); }

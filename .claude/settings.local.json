@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vite:*)",
+      "Bash(node -e \"const s = require\\('./node_modules/@dnd-kit/sortable'\\); console.log\\(Object.keys\\(s\\).filter\\(k => k.includes\\('Strategy'\\)\\)\\)\")"
+    ]
+  }
+}

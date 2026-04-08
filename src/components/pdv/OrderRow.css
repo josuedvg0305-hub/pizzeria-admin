@@ -1,0 +1,199 @@
+.order-row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s, box-shadow .12s;
+  border-radius: 0;
+  padding: 0 4px;
+  border-left: 3px solid transparent;
+}
+
+.order-row:hover {
+  background: var(--surface2);
+}
+
+.order-row--selected {
+  background: #eff6ff !important;
+  border-left-color: #2563eb;
+  box-shadow: inset 0 0 0 1px rgba(37,99,235,.12);
+}
+
+/* ── Cells ── */
+.or-cell {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.or-cell--actions {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* ── Col 1: num / type / time / ago ── */
+.or-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.or-type {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.or-type-icon { font-size: 13px; line-height: 1; }
+
+.or-time {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.or-ago {
+  font-size: 11.5px;
+  color: #d97706;
+  font-weight: 600;
+}
+
+.or-closed {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.or-sched {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 20px;
+  padding: 2px 8px;
+  align-self: flex-start;
+}
+
+/* ── Col 2: status badge ── */
+.or-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.or-badge--pend        { background: #fef3c7; color: #92400e; }
+.or-badge--preparacion { background: #dbeafe; color: #1d4ed8; }
+.or-badge--listo       { background: #d1fae5; color: #065f46; }
+.or-badge--finalizado  { background: #f3f4f6; color: #374151; }
+.or-badge--cancelado   { background: #fee2e2; color: #991b1b; }
+
+/* ── Col 3: total ── */
+.or-total {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Col 4: client ── */
+.or-client-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.or-client-phone {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.or-client-addr {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.or-paid-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 99px;
+  padding: 2px 8px;
+  align-self: flex-start;
+  margin-top: 1px;
+}
+
+.or-no-client { color: var(--muted); font-size: 13px; }
+
+/* ── Col 5: action buttons ── */
+.or-btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .13s, color .13s, opacity .13s;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Cancelar — outline rojo */
+.or-btn--cancel {
+  background: transparent;
+  border: 1.5px solid #fca5a5;
+  color: #dc2626;
+}
+.or-btn--cancel:hover { background: #fee2e2; }
+
+/* Cobrar — outline azul */
+.or-btn--pay {
+  background: transparent;
+  border: 1.5px solid #93c5fd;
+  color: #2563eb;
+}
+.or-btn--pay:hover { background: #eff6ff; }
+
+/* Aceptar — verde sólido */
+.or-btn--accept {
+  background: #16a34a;
+  border: 1.5px solid #16a34a;
+  color: #fff;
+}
+.or-btn--accept:hover { background: #15803d; border-color: #15803d; }
+
+/* Listo — azul sólido */
+.or-btn--prep {
+  background: #2563eb;
+  border: 1.5px solid #2563eb;
+  color: #fff;
+}
+.or-btn--prep:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
+/* Finalizar — gris oscuro sólido */
+.or-btn--finish {
+  background: #374151;
+  border: 1.5px solid #374151;
+  color: #fff;
+}
+.or-btn--finish:hover { background: #1f2937; border-color: #1f2937; }

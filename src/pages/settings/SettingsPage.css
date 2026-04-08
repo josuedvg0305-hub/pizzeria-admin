@@ -1,0 +1,273 @@
+/* ── SettingsPage.css ─────────────────────────────────────────────────────────
+   Prefijo: sp-
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.sp-root {
+  padding: 24px 28px;
+  max-width: 1300px;
+}
+
+/* ── Encabezado de página ── */
+.sp-header {
+  margin-bottom: 24px;
+}
+
+.sp-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.sp-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Layout dos columnas ── */
+.sp-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .sp-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Tarjetas ── */
+.sp-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.sp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sp-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+}
+
+.sp-card-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sp-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface3);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+}
+
+.sp-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ── Formulario de nueva zona ── */
+.sp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sp-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.sp-input {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sp-input:focus {
+  border-color: var(--blue);
+}
+
+/* Paleta de colores */
+.sp-color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sp-color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+  padding: 0;
+}
+
+.sp-color-dot:hover {
+  transform: scale(1.15);
+}
+
+.sp-color-dot--active {
+  border-color: var(--text);
+  transform: scale(1.2);
+}
+
+.sp-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 0;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  padding: 6px 10px;
+}
+
+.sp-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.sp-btn {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.sp-btn--primary {
+  background: var(--blue);
+  color: #fff;
+}
+
+.sp-btn--primary:hover {
+  opacity: 0.88;
+}
+
+.sp-btn--ghost {
+  background: var(--surface3);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.sp-btn--ghost:hover {
+  background: var(--border);
+}
+
+/* ── Lista de zonas ── */
+.sp-zone-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-zone-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sp-zone-item:hover {
+  border-color: var(--blue);
+}
+
+.sp-zone-item--selected {
+  border-color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 8%, var(--surface3));
+}
+
+.sp-zone-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sp-zone-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.sp-zone-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-zone-price {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sp-zone-del {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.12s;
+  flex-shrink: 0;
+}
+
+.sp-zone-del:hover {
+  color: #dc2626;
+}

@@ -1,0 +1,128 @@
+.cfm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1040;
+  display: flex;
+  justify-content: flex-end;
+  animation: cfmFadeIn 0.2s ease-out;
+}
+
+@keyframes cfmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cfm-drawer {
+  background: var(--surface);
+  width: 380px;
+  height: 100vh;
+  box-shadow: -5px 0 25px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  animation: cfmSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cfmSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.cfm-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cfm-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cfm-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--muted);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+.cfm-close:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.cfm-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cfm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cfm-sec-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.cfm-sec-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cfm-check-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cfm-check-label input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.cfm-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.cfm-apply-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.cfm-apply-btn:hover {
+  background: #1d4ed8;
+}

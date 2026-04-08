@@ -1,0 +1,115 @@
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--surface3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+/* ── Pills ── */
+.filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 13px;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .14s, color .14s, background .14s;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  border-color: rgba(0,0,0,.18);
+  color: var(--text);
+}
+
+/* Active: default (Todo) */
+.filter-pill.active {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+/* Check mark prefix */
+.filter-pill-check {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Counts */
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 5px;
+}
+
+.filter-count--orange {
+  background: #fef3c7;
+  color: var(--warning);
+}
+
+.filter-count--green {
+  background: #dcfce7;
+  color: var(--success);
+}
+
+.filter-count--default {
+  background: var(--surface3);
+  color: var(--muted);
+}
+
+/* Active pill with color variants */
+.filter-pill--orange.active {
+  border-color: var(--warning);
+  color: var(--warning);
+  background: #fffbeb;
+}
+
+.filter-pill--green.active {
+  border-color: var(--success);
+  color: var(--success);
+  background: #f0fdf4;
+}
+
+/* PDV/WEB online dot */
+.filter-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.filter-dot--green {
+  background: var(--success);
+  box-shadow: 0 0 0 2px #dcfce7;
+}
+
+/* ── Total ── */
+.filter-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

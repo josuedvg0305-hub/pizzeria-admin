@@ -1,0 +1,208 @@
+/* ── Overlay ── */
+.otm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: otm-fade-in .15s ease;
+}
+
+@keyframes otm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal box ── */
+.otm-modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 410px;
+  overflow: hidden;
+  animation: otm-slide-up .18s ease;
+}
+
+@keyframes otm-slide-up {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Header ── */
+.otm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.otm-header-text {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.otm-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.otm-title-sep {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+.otm-title-sub {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.otm-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  line-height: 1;
+}
+
+.otm-close:hover {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+/* ── Grid ── */
+.otm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 20px 20px;
+}
+
+/* ── Card base ── */
+.otm-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .14s, background .14s, transform .1s, box-shadow .14s;
+}
+
+.otm-card:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+.otm-card:active {
+  transform: scale(.98);
+}
+
+/* Flash card — spans 2 columns + green accent */
+.otm-card--span2 {
+  grid-column: 1 / -1;
+}
+
+.otm-card--flash {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.otm-card--flash:hover {
+  border-color: #059669;
+  background: #ecfdf5;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+}
+
+/* ── Card icon ── */
+.otm-card-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.otm-card--span2 .otm-card-icon {
+  font-size: 30px;
+}
+
+/* ── Card text ── */
+.otm-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.otm-card-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.otm-card--span2 .otm-card-label {
+  font-size: 15px;
+}
+
+.otm-card-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ── Badge (Nuevo) ── */
+.otm-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 32px;
+  background: #10b981;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+/* ── Arrow ── */
+.otm-card-arrow {
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color .14s, transform .14s;
+}
+
+.otm-card:hover .otm-card-arrow {
+  color: #2563eb;
+  transform: translateX(2px);
+}
+
+.otm-card--flash:hover .otm-card-arrow {
+  color: #059669;
+}

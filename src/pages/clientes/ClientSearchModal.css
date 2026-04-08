@@ -1,0 +1,165 @@
+.csm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 80px;
+  z-index: 1050;
+  animation: csmFadeIn 0.2s ease-out;
+}
+
+@keyframes csmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.csm-modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 500px;
+  max-width: 90vw;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.csm-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.csm-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.csm-close {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--muted);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+.csm-close:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.csm-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.csm-search-row {
+  display: flex;
+  gap: 12px;
+}
+
+.csm-select {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.csm-input-wrap {
+  flex: 1;
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.csm-phone-prefix {
+  padding: 10px 12px;
+  background: var(--surface2);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
+  border-right: 1px solid var(--border);
+  user-select: none;
+}
+
+.csm-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.csm-results {
+  min-height: 100px;
+  max-height: 300px;
+  overflow-y: auto;
+  border-top: 1px dashed var(--border);
+  padding-top: 16px;
+}
+
+.csm-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.csm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.csm-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.csm-list-item:hover {
+  border-color: #2563eb;
+}
+
+.csm-li-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.csm-li-phone {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.csm-li-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
