@@ -215,3 +215,19 @@
 .sidebar-user-info { display: flex; flex-direction: column; line-height: 1.25; }
 .sidebar-user-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.85); }
 .sidebar-user-role { font-size: 11px; color: rgba(255,255,255,.35); }
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+}

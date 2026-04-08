@@ -38,7 +38,7 @@ const FOOTER_ITEMS = [
 /* IDs that belong to the Ventas group */
 const VENTAS_IDS = new Set(['ventas', 'historial', 'reportes'])
 
-export default function Sidebar({ activePage, onNavigate }) {
+export default function Sidebar({ activePage, onNavigate, isOpen }) {
   const { logo, setLogo } = useMenu()
   const inputRef = useRef(null)
 
@@ -61,7 +61,7 @@ export default function Sidebar({ activePage, onNavigate }) {
   const isVentasActive = VENTAS_IDS.has(activePage)
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'is-open' : ''}`}>
       <div className="sidebar-header">
         <div
           className="sidebar-logo-wrap"

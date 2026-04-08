@@ -22,6 +22,7 @@ const PAGES = {
 export default function App() {
   const { user } = useAuth()
   const [activePage, setActivePage] = useState('menu')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   if (!user) {
     return <Login />
@@ -29,12 +30,41 @@ export default function App() {
 
   const PageComponent = PAGES[activePage] ?? MenuPage
 
+  const handleNavigate = (page) => {
+    setActivePage(page)
+    setIsMobileMenuOpen(false)
+  }
+
   return (
     <div className="app-layout">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
-      <main className="app-main">
-        <PageComponent />
-      </main>
+      <Sidebar 
+        activePage={activePage} 
+        onNavigate={handleNavigate} 
+        isOpen={isMobileMenuOpen}
+      />
+      
+      {isMobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      <div className="app-content-wrapper">
+        <header className="mobile-header">
+          <span className="mobile-header-title">Admin Pizzería</span>
+          <button 
+            className="mobile-header-btn" 
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            ☰
+          </button>
+        </header>
+
+        <main className="app-main">
+          <PageComponent />
+        </main>
+      </div>
     </div>
   )
 }
