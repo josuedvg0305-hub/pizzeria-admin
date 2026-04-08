@@ -76,9 +76,10 @@ export function MenuProvider({ children }) {
   }
 
   const mapCategoryToDB = (data) => {
-    const o = { ...data }
-    if (o.sortOrder !== undefined) { o.sort_order = o.sortOrder; delete o.sortOrder }
-    delete o.products
+    const o = {}
+    if (data.name !== undefined) o.name = data.name
+    if (data.sortOrder !== undefined) o.sort_order = data.sortOrder
+    if (data.active !== undefined) o.is_active = Boolean(data.active)
     return o
   }
 
@@ -102,8 +103,24 @@ export function MenuProvider({ children }) {
   }, [categories])
 
   const updateCategory = useCallback(async (id, data) => {
+    // Optimistic UI update
     setCategories(p => p.map(c => c.id === id ? { ...c, ...data } : c))
-    await supabase.from('categories').update(mapCategoryToDB(data)).eq('id', id)
+    
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .update(mapCategoryToDB(data))
+        .eq('id', Number(id))
+
+      if (error) {
+        console.error("Error Supabase Toggle:", error)
+        alert(`Error al actualizar la categoría: ${error.message}`)
+      }
+    } catch (err) {
+      console.error("Error inesperado en updateCategory:", err)
+      alert(`Error inesperado: ${err.message}`)
+    }
+
     fetchMenuData()
   }, [])
 
