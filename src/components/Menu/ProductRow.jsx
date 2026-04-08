@@ -40,17 +40,20 @@ export default function ProductRow({ product, categoryId, onEdit }) {
   /* ── Price display helpers ── */
   let priceNode
   if (product.priceType === 'simple') {
-    const hasPromo = product.promoPrice !== null && product.promoPrice > 0
+    const activePrice = product.variants?.length > 0 ? product.variants[0].price : 0
+    const activePromo = product.variants?.length > 0 ? product.variants[0].promoPrice : null
+    const hasPromo = activePromo !== null && activePromo > 0
+
     priceNode = (
       <div className="price-col">
         {hasPromo ? (
           <>
-            <span className="price-orig">{fmt(product.price)}</span>
-            <span className="price-promo">{fmt(product.promoPrice)}</span>
-            <span className="price-disc">-{discount(product.price, product.promoPrice)}%</span>
+            <span className="price-orig">{fmt(activePrice)}</span>
+            <span className="price-promo">{fmt(activePromo)}</span>
+            <span className="price-disc">-{discount(activePrice, activePromo)}%</span>
           </>
         ) : (
-          <span className="price-normal">{fmt(product.price)}</span>
+          <span className="price-normal">{fmt(activePrice)}</span>
         )}
       </div>
     )

@@ -235,6 +235,14 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
 
           {/* ── Modifier sections ── */}
           {mods.map((mod, mi) => {
+            // Bug 4 Fix: Filter variant-specific modifier groups
+            if (currentVariantName) {
+              const hasParen = mod.name.includes('(')
+              if (hasParen && !mod.name.includes(currentVariantName)) {
+                return null
+              }
+            }
+
             const visibleOptions = (mod.options ?? []).filter(o => o.active !== false)
             if (visibleOptions.length === 0) return null
             return (

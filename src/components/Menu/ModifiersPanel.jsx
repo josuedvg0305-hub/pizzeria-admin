@@ -171,7 +171,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
         <button
           type="button"
           className={`mod-eye-btn${!opt.active ? ' mod-eye-btn--off' : ''}`}
-          onClick={() => toggleOptActive(opt.id)}
+          onClick={() => toggleOptActive(i)}
           title={opt.active ? 'Desactivar opción' : 'Activar opción'}
         >
           <EyeIcon open={opt.active} />
@@ -243,7 +243,7 @@ function GroupModal({ group, onClose }) {
     setOptions(prev => prev.map(o =>
       o.id === id ? { ...o, priceByVariant: { ...o.priceByVariant, [variantName]: val } } : o
     ))
-  const toggleOptActive = (id) => setOptions(prev => prev.map(o => o.id === id ? { ...o, active: !o.active } : o))
+  const toggleOptActive = (index) => setOptions(prev => prev.map((o, i) => i === index ? { ...o, active: !o.active } : o))
 
   const handleDragEnd = ({ active, over }) => {
     if (over && active.id !== over.id) {

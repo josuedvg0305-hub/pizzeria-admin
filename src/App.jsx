@@ -20,10 +20,14 @@ const PAGES = {
 }
 
 export default function App() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [activePage, setActivePage] = useState('menu')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
+  if (loading) {
+    return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>Cargando...</div>
+  }
+
   if (!user) {
     return <Login />
   }
