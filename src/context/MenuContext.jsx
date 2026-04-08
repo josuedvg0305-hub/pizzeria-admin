@@ -64,14 +64,21 @@ export function MenuProvider({ children }) {
 
   // ── Mappers Data a DB DB ──────────────────────────────────────────────────
   const mapProductToDB = (data) => {
-    const o = { ...data }
-    if (o.categoryId !== undefined) { o.category_id = o.categoryId; delete o.categoryId }
-    if (o.promoPrice !== undefined) { o.promo_price = o.promoPrice; delete o.promoPrice }
-    if (o.priceType !== undefined) { o.price_type = o.priceType; delete o.priceType }
-    if (o.modifierGroupIds !== undefined) { o.modifier_group_ids = o.modifierGroupIds; delete o.modifierGroupIds }
-    if (o.sortOrder !== undefined) { o.sort_order = o.sortOrder; delete o.sortOrder }
-    // Clean react specific
-    delete o.products
+    const o = {}
+    if (data.name !== undefined) o.name = data.name
+    if (data.description !== undefined) o.description = data.description
+    // User requested explicit is_active payload
+    if (data.active !== undefined) o.is_active = Boolean(data.active)
+    if (data.images !== undefined) o.images = data.images
+    if (data.priceType !== undefined) o.price_type = data.priceType
+    if (data.price !== undefined) o.price = data.price
+    if (data.promoPrice !== undefined) o.promo_price = data.promoPrice
+    if (data.cost !== undefined) o.cost = data.cost
+    if (data.variants !== undefined) o.variants = data.variants
+    if (data.modifierGroupIds !== undefined) o.modifier_group_ids = data.modifierGroupIds
+    if (data.stock !== undefined) o.stock = data.stock
+    if (data.sortOrder !== undefined) o.sort_order = data.sortOrder
+    if (data.categoryId !== undefined) o.category_id = data.categoryId
     return o
   }
 
@@ -86,6 +93,8 @@ export function MenuProvider({ children }) {
   const mapModGroupToDB = (data) => {
     const o = { ...data }
     if (o.sortOrder !== undefined) { o.sort_order = o.sortOrder; delete o.sortOrder }
+    // Clean id just in case
+    delete o.id
     return o
   }
 
@@ -107,14 +116,18 @@ export function MenuProvider({ children }) {
     setCategories(p => p.map(c => c.id === id ? { ...c, ...data } : c))
     
     try {
-      const { error } = await supabase
-        .from('categories')
-        .update(mapCategoryToDB(data))
-        .eq('id', Number(id))
+      const payload = mapCategoryToDB(data)
+      // Only process network request if payload is not empty
+      if (Object.keys(payload).length > 0) {
+        const { error } = await supabase
+          .from('categories')
+          .update(payload)
+          .eq('id', Number(id))
 
-      if (error) {
-        console.error("Error Supabase Toggle:", error)
-        alert(`Error al actualizar la categoría: ${error.message}`)
+        if (error) {
+          console.error("Error Supabase Toggle Categoria:", error)
+          alert(`Error al actualizar la categoría: ${error.message}`)
+        }
       }
     } catch (err) {
       console.error("Error inesperado en updateCategory:", err)
@@ -151,7 +164,8 @@ export function MenuProvider({ children }) {
       c.id === catId ? { ...c, products: [...c.products, { id: newId, categoryId: catId, ...data }] } : c
     ))
 
-    const dbPayload = mapProductToDB({ id: newId, categoryId: catId, ...data })
+    const dbPayload = mapProductToDB({ categoryId: catId, ...data })
+    dbPayload.id = newId // Required for insert
     await supabase.from('products').insert(dbPayload)
     fetchMenuData()
   }, [])
@@ -163,9 +177,24 @@ export function MenuProvider({ children }) {
         : c
     ))
 
-    const dbPayload = mapProductToDB(data)
-    await supabase.from('products').update(dbPayload).eq('id', prodId)
-    // No fetchMenuData immediately if it's rapid updates (like UI toggles), but for safety we refresh:
+    try {
+      const dbPayload = mapProductToDB(data)
+      if (Object.keys(dbPayload).length > 0) {
+        const { error } = await supabase
+          .from('products')
+          .update(dbPayload)
+          .eq('id', Number(prodId))
+
+        if (error) {
+          console.error("Error Supabase Toggle Producto:", error)
+          alert(`Error al actualizar el producto: ${error.message}`)
+        }
+      }
+    } catch (err) {
+      console.error("Error inesperado en updateProduct:", err)
+      alert(`Error inesperado: ${err.message}`)
+    }
+
     fetchMenuData()
   }, [])
 
