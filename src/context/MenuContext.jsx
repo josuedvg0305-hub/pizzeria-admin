@@ -137,6 +137,22 @@ export function MenuProvider({ children }) {
     fetchMenuData()
   }, [])
 
+  const handleToggleCategory = async (id, currentStatus) => {
+    const newStatus = !currentStatus;
+    console.log("Toggle intentado:", id, newStatus);
+
+    // Optimistic UI update
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, is_active: newStatus } : c));
+
+    const { error } = await supabase.from('categories').update({ is_active: newStatus }).eq('id', id);
+
+    if (error) {
+      console.error("Error Supabase:", error);
+      // Rollback on error
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, is_active: currentStatus } : c));
+    }
+  };
+
   const deleteCategory = useCallback(async (id) => {
     setCategories(p => p.filter(c => c.id !== id))
     await supabase.from('categories').delete().eq('id', id)
@@ -197,6 +213,30 @@ export function MenuProvider({ children }) {
 
     fetchMenuData()
   }, [])
+
+  const handleToggleProduct = async (catId, prodId, currentStatus) => {
+    const newStatus = !currentStatus;
+    console.log("Toggle intentado:", prodId, newStatus);
+
+    // Optimistic UI update
+    setCategories(prev => prev.map(c =>
+      c.id === catId
+        ? { ...c, products: c.products.map(pr => pr.id === prodId ? { ...pr, is_active: newStatus } : pr) }
+        : c
+    ));
+
+    const { error } = await supabase.from('products').update({ is_active: newStatus }).eq('id', prodId);
+
+    if (error) {
+      console.error("Error Supabase:", error);
+      // Rollback on error
+      setCategories(prev => prev.map(c =>
+        c.id === catId
+          ? { ...c, products: c.products.map(pr => pr.id === prodId ? { ...pr, is_active: currentStatus } : pr) }
+          : c
+      ));
+    }
+  };
 
   const deleteProduct = useCallback(async (catId, prodId) => {
     setCategories(p => p.map(c =>
@@ -342,7 +382,7 @@ export function MenuProvider({ children }) {
       addProduct, updateProduct, deleteProduct, reorderProducts,
       addModGroup, updateModGroup, deleteModGroup, reorderModGroups,
       bulkUpdateModGroupAssignments,
-      updateStock,
+      updateStock, handleToggleCategory, handleToggleProduct,
     }}>
       {children}
     </Ctx.Provider>

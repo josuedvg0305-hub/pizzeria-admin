@@ -19,7 +19,7 @@ function StockBadge({ stock }) {
 }
 
 export default function ProductRow({ product, categoryId, onEdit }) {
-  const { updateProduct, deleteProduct } = useMenu()
+  const { updateProduct, deleteProduct, handleToggleProduct } = useMenu()
 
   const {
     attributes, listeners, setNodeRef,
@@ -127,8 +127,8 @@ export default function ProductRow({ product, categoryId, onEdit }) {
         <label className="toggle">
           <input
             type="checkbox"
-            checked={product.active}
-            onChange={e => updateProduct(categoryId, product.id, { active: e.target.checked })}
+            checked={product.is_active === true}
+            onChange={() => handleToggleProduct(categoryId, product.id, product.is_active)}
           />
           <span className="toggle-track" />
         </label>

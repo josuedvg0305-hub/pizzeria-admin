@@ -10,7 +10,7 @@ import ProductModal from './ProductModal'
 import './CategorySection.css'
 
 export default function CategorySection({ category }) {
-  const { updateCategory, deleteCategory, reorderProducts } = useMenu()
+  const { updateCategory, deleteCategory, reorderProducts, handleToggleCategory } = useMenu()
   const [expanded, setExpanded]         = useState(false)
   const [renaming, setRenaming]         = useState(false)
   const [nameVal, setNameVal]           = useState(category.name)
@@ -64,7 +64,7 @@ export default function CategorySection({ category }) {
       deleteCategory(category.id)
   }
 
-  const isActive = category.active !== false
+  const isActive = category.is_active === true
 
   return (
     <div
@@ -106,7 +106,7 @@ export default function CategorySection({ category }) {
             <input
               type="checkbox"
               checked={isActive}
-              onChange={e => updateCategory(category.id, { active: e.target.checked })}
+              onChange={() => handleToggleCategory(category.id, category.is_active)}
             />
             <span className="toggle-track" />
           </label>
