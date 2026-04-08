@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
 import Sidebar from './components/Layout/Sidebar'
 import MenuPage from './components/Menu/MenuPage'
@@ -21,8 +21,22 @@ const PAGES = {
 
 export default function App() {
   const { user, loading } = useAuth()
-  const [activePage, setActivePage] = useState('menu')
+  
+  const [activePage, setActivePage] = useState(() => {
+    const path = window.location.pathname.replace('/', '')
+    return PAGES[path] ? path : 'menu'
+  })
+  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace('/', '')
+      if (PAGES[path]) setActivePage(path)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
   
   if (loading) {
     return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>Cargando...</div>
@@ -36,6 +50,7 @@ export default function App() {
 
   const handleNavigate = (page) => {
     setActivePage(page)
+    window.history.pushState(null, '', `/${page}`)
     setIsMobileMenuOpen(false)
   }
 

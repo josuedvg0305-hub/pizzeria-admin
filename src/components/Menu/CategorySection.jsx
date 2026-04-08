@@ -64,12 +64,14 @@ export default function CategorySection({ category }) {
       deleteCategory(category.id)
   }
 
+  const isActive = category.active !== false
+
   return (
     <div
       ref={setNodeRef}
       style={cardStyle}
       {...attributes}
-      className={`cat-section ${!category.active ? 'cat-section--off' : ''}`}
+      className={`cat-section ${!isActive ? 'cat-section--off' : ''}`}
     >
       {/* ── Category header ── */}
       <div className="cat-header">
@@ -100,10 +102,10 @@ export default function CategorySection({ category }) {
         <span className="cat-count-badge">{category.products.length}</span>
 
         <div className="cat-actions">
-          <label className="toggle" title={category.active ? 'Desactivar' : 'Activar'}>
+          <label className="toggle" title={isActive ? 'Desactivar' : 'Activar'}>
             <input
               type="checkbox"
-              checked={category.active}
+              checked={isActive}
               onChange={e => updateCategory(category.id, { active: e.target.checked })}
             />
             <span className="toggle-track" />
