@@ -244,10 +244,13 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
 
           {/* ── Modifier sections ── */}
           {mods.map((mod, mi) => {
-            // Bug 4 Fix: Filter variant-specific modifier groups
+            // Filter variant-specific modifier groups based on size names
             if (currentVariantName) {
-              const hasParen = mod.name.includes('(')
-              if (hasParen && !mod.name.includes(currentVariantName)) {
+              const sizeKeywords = ['Porción', 'Mediana', 'Familiar']
+              const isGlobal = !sizeKeywords.some(keyword => mod.name.includes(keyword))
+              const matchesVariant = mod.name.includes(currentVariantName)
+
+              if (!matchesVariant && !isGlobal) {
                 return null
               }
             }
