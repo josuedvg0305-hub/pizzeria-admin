@@ -15,7 +15,7 @@ export function MenuProvider({ children }) {
   const fetchMenuData = async () => {
     const [catsRes, modsRes, prodsRes] = await Promise.all([
       supabase.from('categories').select('*').order('sort_order'),
-      supabase.from('modifier_groups').select('*').order('sort_order'),
+      supabase.from('modifier_groups').select('*').order('sort_order', { ascending: true }),
       supabase.from('products').select('*').order('sort_order')
     ])
 
@@ -265,16 +265,28 @@ export function MenuProvider({ children }) {
 
   // ── Modifier groups ───────────────────────────────────────────────────────
   const reorderModGroups = useCallback(async (activeId, overId) => {
+    let reordered = []
     setModGroups(p => {
       const oi = p.findIndex(g => g.id === activeId)
       const ni = p.findIndex(g => g.id === overId)
-      const reordered = arrayMove(p, oi, ni)
-
-      const updates = reordered.map((mg, idx) => ({ id: mg.id, sort_order: idx }))
-      supabase.from('modifier_groups').upsert(updates).then(() => fetchMenuData())
-
+      if (oi === -1 || ni === -1) return p
+      reordered = arrayMove(p, oi, ni)
       return reordered
     })
+
+    if (reordered.length > 0) {
+      try {
+        await Promise.all(
+          reordered.map((mg, idx) =>
+            supabase.from('modifier_groups').update({ sort_order: idx }).eq('id', mg.id)
+          )
+        )
+        fetchMenuData()
+      } catch (err) {
+        console.error('Error al actualizar orden de modificadores:', err)
+        fetchMenuData() // Re-fetch on error to revert to DB state
+      }
+    }
   }, [])
 
   const addModGroup = useCallback(async (data) => {
