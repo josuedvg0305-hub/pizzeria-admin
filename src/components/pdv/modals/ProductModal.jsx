@@ -27,7 +27,7 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
     () =>
       (product.modifierGroupIds ?? [])
         .map(id => (modifierGroups ?? []).find(mg => mg.id === id))
-        .filter(Boolean),
+        .filter(mg => mg && mg.is_active !== false),
     [product, modifierGroups]
   )
 

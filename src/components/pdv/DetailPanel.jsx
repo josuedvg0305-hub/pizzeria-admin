@@ -392,7 +392,7 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
 
     const itemModGroups = (product.modifierGroupIds ?? [])
       .map(id => (modifierGroups ?? []).find(mg => mg.id === id))
-      .filter(Boolean)
+      .filter(mg => mg && mg.is_active !== false)
 
     const reconstructedMods = {}
     const hasModifiers = item.modifiers?.length > 0

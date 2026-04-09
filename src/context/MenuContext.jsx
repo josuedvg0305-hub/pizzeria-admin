@@ -356,6 +356,20 @@ export function MenuProvider({ children }) {
     fetchMenuData()
   }, [])
 
+  const handleToggleModGroup = async (id, currentStatus) => {
+    const newStatus = !currentStatus;
+    console.log("Toggle ModGroup intentado:", id, newStatus);
+
+    setModGroups(prev => prev.map(g => g.id === id ? { ...g, is_active: newStatus } : g));
+
+    const { error } = await supabase.from('modifier_groups').update({ is_active: newStatus }).eq('id', id);
+
+    if (error) {
+      console.error("Error Supabase toggle ModGroup:", error);
+      setModGroups(prev => prev.map(g => g.id === id ? { ...g, is_active: currentStatus } : g));
+    }
+  };
+
   /* Assign / unassign a modifier group to a list of products in bulk */
   const bulkUpdateModGroupAssignments = useCallback(async (groupId, assignedProductIds) => {
     const assignedSet = new Set(assignedProductIds)
@@ -419,7 +433,7 @@ export function MenuProvider({ children }) {
       addProduct, updateProduct, deleteProduct, reorderProducts,
       addModGroup, updateModGroup, deleteModGroup, reorderModGroups,
       bulkUpdateModGroupAssignments,
-      updateStock, handleToggleCategory, handleToggleProduct,
+      updateStock, handleToggleCategory, handleToggleProduct, handleToggleModGroup,
     }}>
       {children}
     </Ctx.Provider>

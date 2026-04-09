@@ -462,7 +462,7 @@ function GroupModal({ group, onClose }) {
 }
 
 /* ── Sortable group card ── */
-function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
+function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete, onToggleActive }) {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
@@ -476,8 +476,10 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
     position: 'relative',
   }
 
+  const isActive = g.is_active !== false;
+
   return (
-    <div ref={setNodeRef} style={style} className="mod-group-card">
+    <div ref={setNodeRef} style={style} className={`mod-group-card ${!isActive ? 'mod-group-card--off' : ''}`}>
       <div className="mod-group-card-header">
         <button className="drag-handle mod-group-drag" {...attributes} {...listeners} tabIndex={-1}>
           <DotGrid />
@@ -500,6 +502,14 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
           </div>
         </div>
         <div className="mod-group-card-actions">
+          <label className="toggle" title={isActive ? 'Desactivar' : 'Activar'} onClick={e => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={onToggleActive}
+            />
+            <span className="toggle-track" />
+          </label>
           <button className="btn btn-ghost btn-sm" onClick={onEdit}>Editar</button>
           <button className="btn btn-sm mod-del-btn" onClick={onDelete}>Eliminar</button>
           <button
@@ -542,7 +552,7 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
 
 /* ── Main panel ── */
 export default function ModifiersPanel() {
-  const { modifierGroups, deleteModGroup, reorderModGroups } = useMenu()
+  const { modifierGroups, deleteModGroup, reorderModGroups, handleToggleModGroup } = useMenu()
   const [showModal,    setShowModal]   = useState(false)
   const [editing,      setEditing]     = useState(null)
   const [search,       setSearch]      = useState('')
@@ -612,6 +622,7 @@ export default function ModifiersPanel() {
                   onToggle={() => toggleExpanded(g.id)}
                   onEdit={() => openEdit(g)}
                   onDelete={() => handleDelete(g)}
+                  onToggleActive={() => handleToggleModGroup(g.id, g.is_active !== false)}
                 />
               ))}
             </div>
