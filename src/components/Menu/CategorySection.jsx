@@ -22,7 +22,7 @@ export default function CategorySection({ category }) {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
-  } = useSortable({ id: category.id })
+  } = useSortable({ id: String(category.id) })
 
   const cardStyle = {
     transform: CSS.Transform.toString(transform),
@@ -148,7 +148,7 @@ export default function CategorySection({ category }) {
               onDragEnd={handleProductDragEnd}
             >
               <SortableContext
-                items={category.products.map(p => p.id)}
+                items={category.products.map(p => String(p.id))}
                 strategy={verticalListSortingStrategy}
               >
                 <table className="products-table">

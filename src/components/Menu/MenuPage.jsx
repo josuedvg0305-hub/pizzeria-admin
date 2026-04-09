@@ -31,7 +31,7 @@ export default function MenuPage() {
     if (over && active.id !== over.id) reorderCategories(active.id, over.id)
   }
 
-  const draggingCat = categories.find(c => c.id === activeId)
+  const draggingCat = categories.find(c => String(c.id) === String(activeId))
 
   return (
     <div className="menu-page">
@@ -87,7 +87,7 @@ export default function MenuPage() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={categories.map(c => c.id)}
+                items={categories.map(c => String(c.id))}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="mp-categories">

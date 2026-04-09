@@ -458,7 +458,7 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
-  } = useSortable({ id: g.id })
+  } = useSortable({ id: String(g.id) })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -591,7 +591,7 @@ export default function ModifiersPanel() {
         <div className="mods-no-results">Sin resultados para "{search}"</div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={filtered.map(g => g.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={filtered.map(g => String(g.id))} strategy={verticalListSortingStrategy}>
             <div className="mod-group-cards">
               {filtered.map(g => (
                 <SortableGroupCard

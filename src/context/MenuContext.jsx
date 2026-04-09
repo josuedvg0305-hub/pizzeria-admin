@@ -161,17 +161,28 @@ export function MenuProvider({ children }) {
   }, [])
 
   const reorderCategories = useCallback(async (activeId, overId) => {
+    let reordered = []
     setCategories(p => {
-      const oi = p.findIndex(c => c.id === activeId)
-      const ni = p.findIndex(c => c.id === overId)
-      const reordered = arrayMove(p, oi, ni)
-      
-      // Update DB sort_orders
-      const updates = reordered.map((cat, idx) => ({ id: cat.id, sort_order: idx }))
-      supabase.from('categories').upsert(updates).then(() => fetchMenuData())
-      
+      const oi = p.findIndex(c => String(c.id) === String(activeId))
+      const ni = p.findIndex(c => String(c.id) === String(overId))
+      if (oi === -1 || ni === -1) return p
+      reordered = arrayMove(p, oi, ni)
       return reordered
     })
+    
+    if (reordered.length > 0) {
+      try {
+        await Promise.all(
+          reordered.map((cat, idx) => 
+            supabase.from('categories').update({ sort_order: idx }).eq('id', cat.id)
+          )
+        )
+        fetchMenuData()
+      } catch (err) {
+        console.error('Error al reordenar categorias:', err)
+        fetchMenuData()
+      }
+    }
   }, [])
 
   // ── Products ──────────────────────────────────────────────────────────────
@@ -249,26 +260,39 @@ export function MenuProvider({ children }) {
   }, [])
 
   const reorderProducts = useCallback(async (catId, activeId, overId) => {
+    let updatesFound = false
+    let reordered = []
     setCategories(p => p.map(c => {
-      if (c.id !== catId) return c
-      const oi = c.products.findIndex(pr => pr.id === activeId)
-      const ni = c.products.findIndex(pr => pr.id === overId)
-      const reordered = arrayMove(c.products, oi, ni)
-
-      // Update DB
-      const updates = reordered.map((pr, idx) => ({ id: pr.id, category_id: c.id, sort_order: idx }))
-      supabase.from('products').upsert(updates).then(() => fetchMenuData())
-
+      if (String(c.id) !== String(catId)) return c
+      const oi = c.products.findIndex(pr => String(pr.id) === String(activeId))
+      const ni = c.products.findIndex(pr => String(pr.id) === String(overId))
+      if (oi === -1 || ni === -1) return c
+      reordered = arrayMove(c.products, oi, ni)
+      updatesFound = true
       return { ...c, products: reordered }
     }))
+
+    if (updatesFound && reordered.length > 0) {
+      try {
+        await Promise.all(
+          reordered.map((pr, idx) =>
+            supabase.from('products').update({ sort_order: idx }).eq('id', pr.id)
+          )
+        )
+        fetchMenuData()
+      } catch (err) {
+        console.error('Error al reordenar productos:', err)
+        fetchMenuData()
+      }
+    }
   }, [])
 
   // ── Modifier groups ───────────────────────────────────────────────────────
   const reorderModGroups = useCallback(async (activeId, overId) => {
     let reordered = []
     setModGroups(p => {
-      const oi = p.findIndex(g => g.id === activeId)
-      const ni = p.findIndex(g => g.id === overId)
+      const oi = p.findIndex(g => String(g.id) === String(activeId))
+      const ni = p.findIndex(g => String(g.id) === String(overId))
       if (oi === -1 || ni === -1) return p
       reordered = arrayMove(p, oi, ni)
       return reordered

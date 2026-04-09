@@ -24,7 +24,7 @@ export default function ProductRow({ product, categoryId, onEdit }) {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
-  } = useSortable({ id: product.id })
+  } = useSortable({ id: String(product.id) })
 
   const style = {
     transform: CSS.Transform.toString(transform),
