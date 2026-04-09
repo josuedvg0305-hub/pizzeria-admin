@@ -81,12 +81,14 @@ export default function ProductRow({ product, categoryId, onEdit }) {
     )
   }
 
+  const isActive = product.is_active !== false
+
   return (
     <tr
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={`product-row ${!product.active ? 'product-row--off' : ''}`}
+      className={`product-row ${!isActive ? 'product-row--off' : ''}`}
     >
       {/* drag handle */}
       <td className="td-drag">
@@ -127,8 +129,8 @@ export default function ProductRow({ product, categoryId, onEdit }) {
         <label className="toggle">
           <input
             type="checkbox"
-            checked={product.is_active === true}
-            onChange={() => handleToggleProduct(categoryId, product.id, product.is_active)}
+            checked={isActive}
+            onChange={() => handleToggleProduct(categoryId, product.id, isActive)}
           />
           <span className="toggle-track" />
         </label>
