@@ -99,12 +99,13 @@ function initForm(product) {
   }
   return {
     ...product,
+    active:     (product.is_active ?? product.active) !== false,
     price:      String(product.price || ''),
     promoPrice: product.promoPrice !== null ? String(product.promoPrice) : '',
     cost:       product.cost !== null ? String(product.cost) : '',
-    variants:   product.variants.map(v => ({
+    variants:   (product.variants || []).map(v => ({
       ...v,
-      price:      String(v.price),
+      price:      String(v.price || ''),
       promoPrice: v.promoPrice !== null ? String(v.promoPrice) : '',
     })),
   }
