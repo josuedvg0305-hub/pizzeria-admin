@@ -217,9 +217,16 @@ function GroupModal({ group, onClose }) {
   const [multiple, setMultiple] = useState(group?.multiple ?? true)
   const [min,      setMin]      = useState(String(group?.min ?? 0))
   const [max,      setMax]      = useState(group?.max !== null && group?.max !== undefined ? String(group.max) : '')
-  const [options,  setOptions]  = useState(
-    group?.options ?? [{ id: generateId(), name: '', price: '', promoPrice: '', active: true, priceByVariant: null }]
-  )
+  const [options,  setOptions]  = useState(() => {
+    if (!group || !Array.isArray(group.options) || group.options.length === 0) {
+      return [{ id: generateId(), name: '', price: '', promoPrice: '', active: true, priceByVariant: null }]
+    }
+    return group.options.map(opt => ({
+      ...opt,
+      id: opt.id || crypto.randomUUID(),
+      active: opt.active ?? opt.is_active ?? true
+    }))
+  })
 
   /* Productos state — initialize from current assignments */
   const [selectedProductIds, setSelectedProductIds] = useState(() => {
@@ -290,6 +297,7 @@ function GroupModal({ group, onClose }) {
         .filter(o => o.name.trim())
         .map(o => ({
           ...o,
+          id:             o.id || crypto.randomUUID(),
           active:         o.active !== false,
           price:          o.priceByVariant ? null : (Number(o.price) || 0),
           promoPrice:     o.priceByVariant ? null : (o.promoPrice !== '' ? Number(o.promoPrice) : null),
