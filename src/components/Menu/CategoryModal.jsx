@@ -1,11 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../shared/Modal'
 import { useMenu } from '../../context/MenuContext'
 
-export default function CategoryModal({ category, onClose }) {
+export default function CategoryModal({ category = null, onClose }) {
   const { addCategory, updateCategory } = useMenu()
-  const isEdit = !!category
+  const isEdit = !!(category && Object.keys(category).length > 0)
+  
   const [name, setName] = useState(category?.name || '')
+
+  useEffect(() => {
+    if (!category || Object.keys(category).length === 0) return
+    setName(category?.name || '')
+  }, [category])
 
   if (isEdit && (!category || Object.keys(category).length === 0)) {
     return null;
