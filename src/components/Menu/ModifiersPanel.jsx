@@ -56,22 +56,21 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
   }
 
   const hasVariants = variantNames.length > 0
-  const isByVariant = !!opt.priceByVariant
-
+  const isActive = opt.active !== false && opt.is_active !== false
   const [variantCollapsed, setVariantCollapsed] = useState(false)
 
   const switchToVariant = () => {
     const init = Object.fromEntries(variantNames.map(v => [v, opt.priceByVariant?.[v] ?? '']))
-    updOpt(opt.id, 'priceByVariant', init)
+    updOpt(i, 'priceByVariant', init)
     setVariantCollapsed(false)   // always expand when activating
   }
-  const switchToFixed = () => updOpt(opt.id, 'priceByVariant', null)
+  const switchToFixed = () => updOpt(i, 'priceByVariant', null)
 
   return (
     <div ref={setNodeRef} style={style} className="mod-option-row">
 
       {/* ── Dimmable zone: everything except eye + × ── */}
-      <div className={`mod-opt-dimmable${!opt.active ? ' mod-opt-dimmable--off' : ''}`}>
+      <div className={`mod-opt-dimmable${!isActive ? ' mod-opt-dimmable--off' : ''}`}>
 
         {/* Main row */}
         <div className="mod-opt-main-row">
@@ -84,7 +83,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
             style={{ flex: 2, minWidth: 0 }}
             placeholder="Nombre de la opción"
             value={opt.name}
-            onChange={e => updOpt(opt.id, 'name', e.target.value)}
+            onChange={e => updOpt(i, 'name', e.target.value)}
           />
 
           {/* Price inputs — only in fixed mode */}
@@ -96,7 +95,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
                   className="form-input pm-price-inp"
                   type="number" min="0" placeholder="0"
                   value={opt.price}
-                  onChange={e => updOpt(opt.id, 'price', e.target.value)}
+                  onChange={e => updOpt(i, 'price', e.target.value)}
                 />
               </div>
               <div className="pm-price-wrap" style={{ width: 110 }}>
@@ -105,7 +104,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
                   className="form-input pm-price-inp"
                   type="number" min="0" placeholder="—"
                   value={opt.promoPrice}
-                  onChange={e => updOpt(opt.id, 'promoPrice', e.target.value)}
+                  onChange={e => updOpt(i, 'promoPrice', e.target.value)}
                 />
               </div>
             </>
@@ -155,7 +154,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
                       className="form-input pm-price-inp"
                       type="number" min="0" placeholder="0"
                       value={opt.priceByVariant[vname] ?? ''}
-                      onChange={e => updOptVariantPrice(opt.id, vname, e.target.value)}
+                      onChange={e => updOptVariantPrice(i, vname, e.target.value)}
                     />
                   </div>
                 </div>
@@ -170,16 +169,16 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
       <div className="mod-opt-always">
         <button
           type="button"
-          className={`mod-eye-btn${!opt.active ? ' mod-eye-btn--off' : ''}`}
+          className={`mod-eye-btn${!isActive ? ' mod-eye-btn--off' : ''}`}
           onClick={() => toggleOptActive(i)}
-          title={opt.active ? 'Desactivar opción' : 'Activar opción'}
+          title={isActive ? 'Desactivar opción' : 'Activar opción'}
         >
-          <EyeIcon open={opt.active} />
+          <EyeIcon open={isActive} />
         </button>
         <button
           type="button"
           className="pm-variant-rm"
-          onClick={() => removeOpt(opt.id)}
+          onClick={() => removeOpt(i)}
           disabled={isOnly}
         >✕</button>
       </div>
@@ -244,13 +243,13 @@ function GroupModal({ group, onClose }) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
 
   const addOpt    = () => setOptions(prev => [...prev, { id: generateId(), name: '', price: '', promoPrice: '', active: true, priceByVariant: null }])
-  const removeOpt = (id) => { if (options.length > 1) setOptions(prev => prev.filter(o => o.id !== id)) }
-  const updOpt    = (id, k, v) => setOptions(prev => prev.map(o => o.id === id ? { ...o, [k]: v } : o))
-  const updOptVariantPrice = (id, variantName, val) =>
-    setOptions(prev => prev.map(o =>
-      o.id === id ? { ...o, priceByVariant: { ...o.priceByVariant, [variantName]: val } } : o
+  const removeOpt = (index) => { if (options.length > 1) setOptions(prev => prev.filter((o, i) => i !== index)) }
+  const updOpt    = (index, k, v) => setOptions(prev => prev.map((o, i) => i === index ? { ...o, [k]: v } : o))
+  const updOptVariantPrice = (index, variantName, val) =>
+    setOptions(prev => prev.map((o, i) =>
+      i === index ? { ...o, priceByVariant: { ...o.priceByVariant, [variantName]: val } } : o
     ))
-  const toggleOptActive = (index) => setOptions(prev => prev.map((o, i) => i === index ? { ...o, active: !o.active } : o))
+  const toggleOptActive = (index) => setOptions(prev => prev.map((o, i) => i === index ? { ...o, active: o.active === false ? true : false, is_active: o.is_active === false ? true : false } : o))
 
   const handleDragEnd = ({ active, over }) => {
     if (over && active.id !== over.id) {
@@ -298,7 +297,8 @@ function GroupModal({ group, onClose }) {
         .map(o => ({
           ...o,
           id:             o.id || crypto.randomUUID(),
-          active:         o.active !== false,
+          is_active:      o.is_active ?? true,
+          active:         o.active !== false && o.is_active !== false,
           price:          o.priceByVariant ? null : (Number(o.price) || 0),
           promoPrice:     o.priceByVariant ? null : (o.promoPrice !== '' ? Number(o.promoPrice) : null),
           priceByVariant: o.priceByVariant
@@ -514,23 +514,26 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete }) {
 
       <div className={`mod-options-collapse${expanded ? ' mod-options-collapse--open' : ''}`}>
         <div className="mod-options-list">
-          {g.options.map(opt => (
-            <div key={opt.id} className={`mod-opt-chip${opt.active === false ? ' mod-opt-chip--off' : ''}`}>
-              <span className="mod-opt-chip-name">{opt.name}</span>
-              {opt.priceByVariant ? (
-                <span className="mod-opt-price mod-opt-price--varies">Varía según tamaño</span>
-              ) : opt.promoPrice ? (
-                <>
-                  <span className="mod-opt-orig">+${opt.price.toLocaleString('es-CL')}</span>
-                  <span className="mod-opt-promo">+${opt.promoPrice.toLocaleString('es-CL')}</span>
-                </>
-              ) : (
-                <span className="mod-opt-price">
-                  {opt.price > 0 ? `+$${opt.price.toLocaleString('es-CL')}` : 'Gratis'}
-                </span>
-              )}
-            </div>
-          ))}
+          {g.options.map(opt => {
+            const isChipActive = opt.active !== false && opt.is_active !== false;
+            return (
+              <div key={opt.id} className={`mod-opt-chip${!isChipActive ? ' mod-opt-chip--off' : ''}`}>
+                <span className="mod-opt-chip-name">{opt.name}</span>
+                {opt.priceByVariant ? (
+                  <span className="mod-opt-price mod-opt-price--varies">Varía según tamaño</span>
+                ) : opt.promoPrice ? (
+                  <>
+                    <span className="mod-opt-orig">+${opt.price.toLocaleString('es-CL')}</span>
+                    <span className="mod-opt-promo">+${opt.promoPrice.toLocaleString('es-CL')}</span>
+                  </>
+                ) : (
+                  <span className="mod-opt-price">
+                    {opt.price > 0 ? `+$${opt.price.toLocaleString('es-CL')}` : 'Gratis'}
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
