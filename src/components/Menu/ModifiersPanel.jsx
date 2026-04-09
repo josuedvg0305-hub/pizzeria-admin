@@ -56,6 +56,7 @@ function SortableOption({ opt, i, updOpt, updOptVariantPrice, toggleOptActive, r
   }
 
   const hasVariants = variantNames.length > 0
+  const isByVariant = opt.priceByVariant != null
   const isActive = opt.active !== false && opt.is_active !== false
   const [variantCollapsed, setVariantCollapsed] = useState(false)
 
