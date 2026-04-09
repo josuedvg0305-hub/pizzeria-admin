@@ -2,19 +2,24 @@ import { useState } from 'react'
 import Modal from '../shared/Modal'
 import { useMenu } from '../../context/MenuContext'
 
-export default function CategoryModal({ onClose }) {
-  const { addCategory } = useMenu()
-  const [name, setName] = useState('')
+export default function CategoryModal({ category, onClose }) {
+  const { addCategory, updateCategory } = useMenu()
+  const isEdit = !!category
+  const [name, setName] = useState(category?.name || '')
+
+  if (isEdit && (!category || Object.keys(category).length === 0)) {
+    return null;
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!name.trim()) return
-    addCategory({ name: name.trim() })
+    isEdit ? updateCategory(category.id, { name: name.trim() }) : addCategory({ name: name.trim() })
     onClose()
   }
 
   return (
-    <Modal title="Nueva categoría" onClose={onClose} size="sm">
+    <Modal title={isEdit ? `Editar: ${category?.name}` : "Nueva categoría"} onClose={onClose} size="sm">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Nombre <span className="req">*</span></label>

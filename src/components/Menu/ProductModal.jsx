@@ -231,9 +231,13 @@ export default function ProductModal({ product, categoryId, onClose }) {
   const profit = basePrice - cost
   const marginColor = margin >= 50 ? 'var(--success)' : margin >= 30 ? 'var(--warning)' : 'var(--danger)'
 
+  if (isEdit && (!product || Object.keys(product).length === 0)) {
+    return null;
+  }
+
   return (
     <Modal
-      title={isEdit ? `Editar: ${product.name}` : 'Nuevo producto'}
+      title={isEdit ? `Editar: ${product?.name}` : 'Nuevo producto'}
       onClose={onClose}
       size="xl"
     >

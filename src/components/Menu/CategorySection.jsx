@@ -95,11 +95,11 @@ export default function CategorySection({ category }) {
           />
         ) : (
           <span className="cat-name" onDoubleClick={startRename} title="Doble clic para renombrar">
-            {category.name}
+            {category?.name}
           </span>
         )}
 
-        <span className="cat-count-badge">{category.products.length}</span>
+        <span className="cat-count-badge">{category?.products?.length || 0}</span>
 
         <div className="cat-actions">
           <label className="toggle" title={isActive ? 'Desactivar' : 'Activar'}>
