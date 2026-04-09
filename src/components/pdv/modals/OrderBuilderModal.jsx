@@ -114,13 +114,14 @@ export default function OrderBuilderModal({
     if (search.trim()) {
       return categories.flatMap(c =>
         (c.products ?? []).filter(
-          p => p.active !== false &&
+          p => p.is_active !== false &&
                p.name.toLowerCase().includes(search.toLowerCase())
         )
       )
     }
     const cat = categories.find(c => c.id === activeCatId)
-    return cat ? (cat.products ?? []).filter(p => p.active !== false) : []
+    // Only Front-End filter applied: ensure is_active isn't false
+    return cat ? (cat.products ?? []).filter(p => p.is_active !== false) : []
   }, [categories, activeCatId, search])
 
   const handleProductAdd = (item) => {

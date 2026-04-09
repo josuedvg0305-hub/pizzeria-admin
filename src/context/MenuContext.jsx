@@ -27,6 +27,7 @@ export function MenuProvider({ children }) {
     }
 
     if (!catsRes.error && !prodsRes.error && catsRes.data && prodsRes.data) {
+       console.log("Productos cargados en Contexto/PDV:", prodsRes.data)
        const prodsMap = {}
        for (const p of prodsRes.data) {
          if (!prodsMap[p.category_id]) prodsMap[p.category_id] = []
