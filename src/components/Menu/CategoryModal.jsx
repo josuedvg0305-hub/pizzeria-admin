@@ -25,7 +25,7 @@ export default function CategoryModal({ category = null, onClose }) {
   }
 
   return (
-    <Modal title={isEdit ? `Editar: ${category?.name}` : "Nueva categoría"} onClose={onClose} size="sm">
+    <Modal title={isEdit ? (category?.name ? `Editar: ${category.name}` : 'Editar categoría') : "Nueva categoría"} onClose={onClose} size="sm">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Nombre <span className="req">*</span></label>

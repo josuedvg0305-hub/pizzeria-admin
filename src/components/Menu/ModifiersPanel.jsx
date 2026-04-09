@@ -312,7 +312,7 @@ function GroupModal({ group, onClose }) {
   }
 
   return (
-    <Modal title={isEdit ? `Editar grupo: ${group.name}` : 'Nuevo grupo de modificadores'} onClose={onClose} size="md">
+    <Modal title={isEdit ? (group?.name ? `Editar grupo: ${group.name}` : 'Editar grupo') : 'Nuevo grupo de modificadores'} onClose={onClose} size="md">
       {/* ── Modal tabs ── */}
       <div className="gm-tabs">
         <button

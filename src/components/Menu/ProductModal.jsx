@@ -237,7 +237,7 @@ export default function ProductModal({ product, categoryId, onClose }) {
 
   return (
     <Modal
-      title={isEdit ? `Editar: ${product?.name}` : 'Nuevo producto'}
+      title={isEdit ? (product?.name ? `Editar: ${product.name}` : 'Editar producto') : 'Nuevo producto'}
       onClose={onClose}
       size="xl"
     >
