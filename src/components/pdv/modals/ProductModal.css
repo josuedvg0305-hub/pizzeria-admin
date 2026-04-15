@@ -396,7 +396,11 @@
   transition: background .13s;
   white-space: nowrap;
 }
-.pm-add-btn:hover { background: #1d4ed8; }
+.pm-add-btn:hover:not(:disabled) { background: #1d4ed8; }
+.pm-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* ── Custom Tailwind-like Modifier Rows ── */
 .pm-opt-row {

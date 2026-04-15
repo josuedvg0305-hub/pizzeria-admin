@@ -51,14 +51,7 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
       })
       return init
     }
-    const init = {}
-    mods.forEach((mod) => {
-      // Pre-select first option for required groups that act as single selection
-      if (!mod.multiple && mod.required && mod.options?.length > 0) {
-        init[mod.options[0].id] = 1
-      }
-    })
-    return init
+    return {}
   })
 
   /* Current variant name — used to resolve priceByVariant */
@@ -101,6 +94,25 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
 
   const unitPrice = basePrice + sumExtras
   const total     = unitPrice * qty
+
+  /* Form Validation */
+  const isFormValid = useMemo(() => {
+    if (vars.length > 0 && selectedVariant === null) return false;
+
+    for (const mod of mods) {
+      if (mod.is_active === false) continue;
+      
+      const minRequired = mod.required ? Math.max(mod.min || 1, 1) : (mod.min || 0);
+      if (minRequired > 0) {
+        let groupSum = 0;
+        (mod.options || []).forEach(opt => {
+          groupSum += (modifierQuantities[opt.id] || 0);
+        });
+        if (groupSum < minRequired) return false;
+      }
+    }
+    return true;
+  }, [mods, modifierQuantities, vars, selectedVariant]);
 
   /* Handlers */
   const handleModifyQty = (mod, opt, delta) => {
@@ -349,8 +361,12 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
             <span className="pm-qty-val">{qty}</span>
             <button className="pm-qty-btn" onClick={() => setQty(q => q + 1)}>+</button>
           </div>
-          <button className="pm-add-btn" onClick={handleAdd}>
-            {isEditing ? 'Guardar cambios' : 'Agregar'} &nbsp;·&nbsp; {fmt(total)}
+          <button 
+            className="pm-add-btn" 
+            disabled={!isFormValid}
+            onClick={handleAdd}
+          >
+            {!isFormValid ? 'Completa las opciones requeridas' : (isEditing ? 'Guardar cambios' : 'Agregar')} &nbsp;·&nbsp; {fmt(total)}
           </button>
         </div>
 
