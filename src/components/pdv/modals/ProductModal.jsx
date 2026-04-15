@@ -266,7 +266,7 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                   )
               }
 
-              <div className="flex flex-col gap-2 mt-1">
+              <div className="flex flex-col mt-1">
                 {visibleOptions.map(opt => {
                   const resolvedPrice = getPriceForVariant(opt, currentVariantName)
                   const isVariable    = !!opt.priceByVariant && currentVariantName === null
@@ -287,33 +287,33 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                   }
 
                   return (
-                    <div key={opt.id} className="flex items-center justify-between p-2.5 rounded-lg border-[1.5px] border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-                      <div className="flex-1 min-w-0 pr-3">
-                        <div className="text-[13.5px] font-medium text-gray-800 leading-tight">
+                    <div key={opt.id} className="flex items-center justify-between w-full py-3 border-b border-gray-100 last:border-0">
+                      <div className="flex flex-col">
+                        <div className="text-base font-medium text-gray-800">
                           {opt.name}
                         </div>
                         {isVariable ? (
                           <div className="mt-0.5"><span className="pm-price-varies">📐 varía</span></div>
                         ) : resolvedPrice > 0 ? (
-                          <div className="mt-0.5 text-[12.5px] font-semibold text-gray-500">
+                          <div className="text-sm text-gray-500">
                             +{fmt(resolvedPrice)}
                           </div>
                         ) : null}
                       </div>
 
-                      <div className="flex items-center gap-3 bg-gray-100/80 rounded-full p-1 shrink-0">
+                      <div className="flex items-center gap-3">
                         <button
-                          className="w-7 h-7 rounded-full bg-white shadow-sm border border-gray-200/60 flex items-center justify-center text-gray-600 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 font-bold text-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={currentQty === 0}
                           onClick={() => handleModifyQty(mod, opt, -1)}
                         >
                           −
                         </button>
-                        <span className="min-w-[14px] text-center text-[13.5px] font-bold text-gray-800">
+                        <span className="w-4 text-center font-semibold text-gray-800">
                           {currentQty}
                         </span>
                         <button
-                          className="w-7 h-7 rounded-full bg-white shadow-sm border border-gray-200/60 flex items-center justify-center text-gray-600 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95 text-lg"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 font-bold text-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                           disabled={disablePlus}
                           onClick={() => handleModifyQty(mod, opt, 1)}
                         >
