@@ -160,6 +160,42 @@ export function MenuProvider({ children }) {
     fetchMenuData()
   }, [])
 
+  const duplicateCategory = useCallback(async (id) => {
+    const originalCat = categories.find(c => c.id === id);
+    if (!originalCat) return;
+
+    try {
+      const newCatId = generateId();
+      
+      const { error: catError } = await supabase.from('categories').insert({
+        id: newCatId,
+        name: `${originalCat.name} (Copia)`,
+        sort_order: categories.length,
+        is_active: originalCat.is_active
+      });
+
+      if (catError) throw catError;
+
+      if (originalCat.products && originalCat.products.length > 0) {
+        const duplicatedProducts = originalCat.products.map((p, idx) => {
+          const newProdId = generateId() + idx; 
+          const payload = mapProductToDB(p);
+          payload.id = newProdId;
+          payload.category_id = newCatId;
+          return payload;
+        });
+
+        const { error: prodError } = await supabase.from('products').insert(duplicatedProducts);
+        if (prodError) throw prodError;
+      }
+      
+      await fetchMenuData();
+    } catch (err) {
+      console.error("Error al duplicar categoría:", err);
+      alert(`Error al duplicar categoría: ${err.message}`);
+    }
+  }, [categories]);
+
   const reorderCategories = useCallback(async (activeId, overId) => {
     let reordered = []
     setCategories(p => {
@@ -356,6 +392,39 @@ export function MenuProvider({ children }) {
     fetchMenuData()
   }, [])
 
+  const duplicateModGroup = useCallback(async (id) => {
+    const originalGroup = modifierGroups.find(g => g.id === id);
+    if (!originalGroup) return;
+
+    try {
+      const newId = generateId();
+      
+      const duplicatedOptions = (originalGroup.options || []).map(opt => ({
+        ...opt,
+        id: crypto.randomUUID()
+      }));
+
+      const { error } = await supabase.from('modifier_groups').insert({
+        id: newId,
+        name: `${originalGroup.name} (Copia)`,
+        required: originalGroup.required,
+        multiple: originalGroup.multiple,
+        min: originalGroup.min || 0,
+        max: originalGroup.max,
+        options: duplicatedOptions,
+        sort_order: modifierGroups.length,
+        is_active: originalGroup.is_active
+      });
+
+      if (error) throw error;
+      
+      await fetchMenuData();
+    } catch (err) {
+      console.error("Error al duplicar grupo de modificadores:", err);
+      alert(`Error al duplicar grupo: ${err.message}`);
+    }
+  }, [modifierGroups]);
+
   const handleToggleModGroup = async (id, currentStatus) => {
     const newStatus = !currentStatus;
     console.log("Toggle ModGroup intentado:", id, newStatus);
@@ -429,9 +498,9 @@ export function MenuProvider({ children }) {
     <Ctx.Provider value={{
       categories, modifierGroups, logo,
       setLogo, fetchMenuData,
-      addCategory, updateCategory, deleteCategory, reorderCategories,
+      addCategory, updateCategory, deleteCategory, duplicateCategory, reorderCategories,
       addProduct, updateProduct, deleteProduct, reorderProducts,
-      addModGroup, updateModGroup, deleteModGroup, reorderModGroups,
+      addModGroup, updateModGroup, deleteModGroup, duplicateModGroup, reorderModGroups,
       bulkUpdateModGroupAssignments,
       updateStock, handleToggleCategory, handleToggleProduct, handleToggleModGroup,
     }}>

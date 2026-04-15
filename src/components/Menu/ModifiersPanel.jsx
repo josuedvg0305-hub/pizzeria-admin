@@ -463,7 +463,7 @@ function GroupModal({ group, onClose }) {
 }
 
 /* ── Sortable group card ── */
-function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete, onToggleActive }) {
+function SortableGroupCard({ g, expanded, onToggle, onEdit, onDuplicate, onDelete, onToggleActive }) {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
@@ -512,6 +512,7 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete, onToggleAc
             <span className="toggle-track" />
           </label>
           <button className="btn btn-ghost btn-sm" onClick={onEdit}>Editar</button>
+          <button className="btn btn-ghost btn-sm" onClick={onDuplicate}>Duplicar</button>
           <button className="btn btn-sm mod-del-btn" onClick={onDelete}>Eliminar</button>
           <button
             className="btn btn-icon btn-ghost mod-collapse-btn"
@@ -553,7 +554,7 @@ function SortableGroupCard({ g, expanded, onToggle, onEdit, onDelete, onToggleAc
 
 /* ── Main panel ── */
 export default function ModifiersPanel() {
-  const { modifierGroups, deleteModGroup, reorderModGroups, handleToggleModGroup } = useMenu()
+  const { modifierGroups, deleteModGroup, duplicateModGroup, reorderModGroups, handleToggleModGroup } = useMenu()
   const [showModal,    setShowModal]   = useState(false)
   const [editing,      setEditing]     = useState(null)
   const [search,       setSearch]      = useState('')
@@ -566,6 +567,9 @@ export default function ModifiersPanel() {
   const handleDelete = (g) => {
     if (window.confirm(`¿Eliminar el grupo "${g.name}"? Se desvinculará de todos los productos.`))
       deleteModGroup(g.id)
+  }
+  const handleDuplicate = async (g) => {
+    await duplicateModGroup(g.id)
   }
 
   const toggleExpanded = (id) => {
@@ -622,6 +626,7 @@ export default function ModifiersPanel() {
                   expanded={expandedIds.has(g.id)}
                   onToggle={() => toggleExpanded(g.id)}
                   onEdit={() => openEdit(g)}
+                  onDuplicate={() => handleDuplicate(g)}
                   onDelete={() => handleDelete(g)}
                   onToggleActive={() => handleToggleModGroup(g.id, g.is_active !== false)}
                 />
