@@ -40,15 +40,22 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
       return editingItem.variantIdx
     return vars.length > 0 ? 0 : null
   })
-  /* radio    → { [modIdx]: { name, price } }
-     checkbox → { [modIdx]: [{ name, price }, ...] } */
-  const [selectedMods, setSelectedMods] = useState(() => {
-    if (editingItem?.selectedMods) return editingItem.selectedMods
-    // Pre-select first option for required radio groups
+  /* State for multiple quantities mapping option.id -> quantity */
+  const [modifierQuantities, setModifierQuantities] = useState(() => {
+    if (editingItem?.modifierQuantities) return editingItem.modifierQuantities
+    // Fallback: If legacy payload is being edited, map from flat modifiers list
+    if (editingItem?.modifiers && !editingItem.modifierQuantities) {
+      const init = {}
+      editingItem.modifiers.forEach(m => {
+        if (m.id && m.qty > 0) init[m.id] = m.qty
+      })
+      return init
+    }
     const init = {}
-    mods.forEach((mod, mi) => {
+    mods.forEach((mod) => {
+      // Pre-select first option for required groups that act as single selection
       if (!mod.multiple && mod.required && mod.options?.length > 0) {
-        init[mi] = { name: mod.options[0].name, price: mod.options[0].price ?? 0 }
+        init[mod.options[0].id] = 1
       }
     })
     return init
@@ -63,43 +70,6 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
     [mods]
   )
 
-  /* When the selected variant changes, update prices of already-selected mods */
-  useEffect(() => {
-    if (mods.length === 0 || !hasVariantPricedOptions) return
-    const variantName = selectedVariant !== null ? vars[selectedVariant]?.name ?? null : null
-
-    setSelectedMods(prev => {
-      let changed = false
-      const updated = {}
-      Object.entries(prev).forEach(([mi, val]) => {
-        const mod = mods[Number(mi)]
-        if (!mod) { updated[mi] = val; return }
-
-        if (Array.isArray(val)) {
-          const newVal = val.map(sel => {
-            const opt = (mod.options ?? []).find(o => o.name === sel.name)
-            if (!opt || !opt.priceByVariant) return sel
-            const newPrice = getPriceForVariant(opt, variantName)
-            if (newPrice === sel.price) return sel
-            changed = true
-            return { ...sel, price: newPrice }
-          })
-          updated[mi] = newVal
-        } else if (val) {
-          const opt = (mod.options ?? []).find(o => o.name === val.name)
-          if (!opt || !opt.priceByVariant) { updated[mi] = val; return }
-          const newPrice = getPriceForVariant(opt, variantName)
-          if (newPrice === val.price) { updated[mi] = val; return }
-          changed = true
-          updated[mi] = { ...val, price: newPrice }
-        } else {
-          updated[mi] = val
-        }
-      })
-      return changed ? updated : prev
-    })
-  }, [selectedVariant]) // eslint-disable-line react-hooks/exhaustive-deps
-
   /* Escape to close */
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose() }
@@ -112,45 +82,68 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
     ? (vars[selectedVariant].promoPrice ?? vars[selectedVariant].price)
     : (product.promoPrice ?? product.price)
 
-  /* Sum of all selected extras (already have resolved prices from useEffect) */
-  const sumExtras = useMemo(() =>
-    Object.entries(selectedMods).reduce((sum, [, val]) => {
-      if (Array.isArray(val)) return sum + val.reduce((s, o) => s + (o.price ?? 0), 0)
-      return sum + (val?.price ?? 0)
-    }, 0),
-    [selectedMods]
-  )
+  /* Sum of all selected extras */
+  const sumExtras = useMemo(() => {
+    let sum = 0
+    Object.entries(modifierQuantities).forEach(([optId, q]) => {
+      if (q > 0) {
+        for (const mod of mods) {
+          const opt = (mod.options ?? []).find(o => String(o.id) === optId)
+          if (opt) {
+            sum += getPriceForVariant(opt, currentVariantName) * q
+            break
+          }
+        }
+      }
+    })
+    return sum
+  }, [modifierQuantities, mods, currentVariantName])
 
   const unitPrice = basePrice + sumExtras
   const total     = unitPrice * qty
 
-  /* Handlers — resolve price at the moment of selection */
-  const toggleRadio = (modIdx, opt) => {
-    const price = getPriceForVariant(opt, currentVariantName)
-    setSelectedMods(prev => ({ ...prev, [modIdx]: { name: opt.name, price } }))
-  }
+  /* Handlers */
+  const handleModifyQty = (mod, opt, delta) => {
+    setModifierQuantities(prev => {
+      const currentQty = prev[opt.id] || 0
+      const newQty = Math.max(0, currentQty + delta)
+      const limit = mod.multiple ? (mod.max ?? Infinity) : 1
+      
+      const copy = { ...prev }
 
-  const toggleCheck = (modIdx, opt, mod) => {
-    const price = getPriceForVariant(opt, currentVariantName)
-    setSelectedMods(prev => {
-      const cur = prev[modIdx] ?? []
-      const has = cur.some(o => o.name === opt.name)
-      if (has) return { ...prev, [modIdx]: cur.filter(o => o.name !== opt.name) }
-      if (mod.max != null && cur.length >= mod.max) return prev
-      return { ...prev, [modIdx]: [...cur, { name: opt.name, price }] }
+      // If limits to 1 (like radios), auto reset others in the same group
+      if (delta > 0 && limit === 1) {
+        (mod.options ?? []).forEach(o => {
+          if (o.id !== opt.id) {
+            copy[o.id] = 0
+          }
+        })
+      }
+
+      copy[opt.id] = newQty
+      return copy
     })
   }
 
-  const isCheckSel = (modIdx, name) => {
-    const arr = selectedMods[modIdx]
-    return Array.isArray(arr) && arr.some(o => o.name === name)
-  }
-
   const handleAdd = () => {
-    /* Flatten mods — prices already resolved at selection/variant-change time */
-    const flatMods = Object.entries(selectedMods).flatMap(([, val]) =>
-      Array.isArray(val) ? val : (val ? [val] : [])
-    )
+    const flatMods = []
+    Object.entries(modifierQuantities).forEach(([optId, q]) => {
+      if (q > 0) {
+        for (const mod of mods) {
+          const opt = (mod.options ?? []).find(o => String(o.id) === optId)
+          if (opt) {
+            flatMods.push({
+              id: opt.id,
+              name: opt.name,
+              price: getPriceForVariant(opt, currentVariantName),
+              qty: q
+            })
+            break
+          }
+        }
+      }
+    })
+
     onAdd({
       id:        crypto.randomUUID(),       // unique item ID in the order
       productId: product.id,                // reference to the menu product
@@ -159,8 +152,9 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
       variant:   selectedVariant !== null ? vars[selectedVariant].name : null,
       qty,
       price:     unitPrice,
-      modifiers: flatMods,                  // [{name, price}] — for edit reconstruction
-      mods:      flatMods.map(m => m.name), // string[] — for display
+      modifiers: flatMods,                  // [{id, name, price, qty}] — for print and edit reconstruction
+      modifierQuantities,                   // para fácil rehidratación en edición
+      mods:      flatMods.map(m => m.qty > 1 ? `${m.qty}x ${m.name}` : m.name), // string[] — for display
       total,
       note:      note.trim() || null,
     })
@@ -272,58 +266,64 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                   )
               }
 
-              {/* Radio mod */}
-              {!mod.multiple ? (
-                <div className="pm-radio-list">
-                  {visibleOptions.map(opt => {
-                    const sel           = selectedMods[mi]?.name === opt.name
-                    const resolvedPrice = getPriceForVariant(opt, currentVariantName)
-                    const isVariable    = !!opt.priceByVariant && currentVariantName === null
-                    return (
-                      <div
-                        key={opt.id}
-                        className={`pm-radio-row${sel ? ' pm-radio-row--sel' : ''}`}
-                        onClick={() => toggleRadio(mi, opt)}
-                      >
-                        <span className={`pm-radio-circle${sel ? ' pm-radio-circle--sel' : ''}`}>
-                          {sel && <span className="pm-radio-dot" />}
-                        </span>
-                        <span className="pm-radio-label">{opt.name}</span>
+              <div className="flex flex-col gap-2 mt-1">
+                {visibleOptions.map(opt => {
+                  const resolvedPrice = getPriceForVariant(opt, currentVariantName)
+                  const isVariable    = !!opt.priceByVariant && currentVariantName === null
+                  const currentQty    = modifierQuantities[opt.id] || 0
+                  
+                  // Calculate group limit
+                  const limit = mod.multiple ? (mod.max ?? Infinity) : 1
+                  const groupSum = visibleOptions.reduce((acc, o) => acc + (modifierQuantities[o.id] || 0), 0)
+                  
+                  // Disable [+] if the group limit is reached
+                  let disablePlus = groupSum >= limit
+                  if (limit === 1 && currentQty === 0) {
+                    // For single choice, we allow clicking on other options to auto-reset
+                    disablePlus = false
+                  } else if (limit === 1 && currentQty >= 1) {
+                    // But we disable it for the currently selected one up to max 1
+                    disablePlus = true
+                  }
+
+                  return (
+                    <div key={opt.id} className="flex items-center justify-between p-2.5 rounded-lg border-[1.5px] border-gray-200 bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <div className="text-[13.5px] font-medium text-gray-800 leading-tight">
+                          {opt.name}
+                        </div>
                         {isVariable ? (
-                          <span className="pm-price-varies">📐 varía</span>
+                          <div className="mt-0.5"><span className="pm-price-varies">📐 varía</span></div>
                         ) : resolvedPrice > 0 ? (
-                          <span className="pm-radio-price">+{fmt(resolvedPrice)}</span>
+                          <div className="mt-0.5 text-[12.5px] font-semibold text-gray-500">
+                            +{fmt(resolvedPrice)}
+                          </div>
                         ) : null}
                       </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                /* Checkbox mod */
-                <div className="pm-check-list">
-                  {visibleOptions.map(opt => {
-                    const sel           = isCheckSel(mi, opt.name)
-                    const resolvedPrice = getPriceForVariant(opt, currentVariantName)
-                    const isVariable    = !!opt.priceByVariant && currentVariantName === null
-                    return (
-                      <div key={opt.id} className="pm-check-row">
-                        <span className="pm-check-name">{opt.name}</span>
-                        {isVariable ? (
-                          <span className="pm-price-varies">📐 varía</span>
-                        ) : resolvedPrice > 0 ? (
-                          <span className="pm-check-price">+{fmt(resolvedPrice)}</span>
-                        ) : null}
+
+                      <div className="flex items-center gap-3 bg-gray-100/80 rounded-full p-1 shrink-0">
                         <button
-                          className={`pm-check-btn${sel ? ' pm-check-btn--sel' : ''}`}
-                          onClick={() => toggleCheck(mi, opt, mod)}
+                          className="w-7 h-7 rounded-full bg-white shadow-sm border border-gray-200/60 flex items-center justify-center text-gray-600 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95"
+                          disabled={currentQty === 0}
+                          onClick={() => handleModifyQty(mod, opt, -1)}
                         >
-                          {sel ? '✓' : '+'}
+                          −
+                        </button>
+                        <span className="min-w-[14px] text-center text-[13.5px] font-bold text-gray-800">
+                          {currentQty}
+                        </span>
+                        <button
+                          className="w-7 h-7 rounded-full bg-white shadow-sm border border-gray-200/60 flex items-center justify-center text-gray-600 font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95 text-lg"
+                          disabled={disablePlus}
+                          onClick={() => handleModifyQty(mod, opt, 1)}
+                        >
+                          +
                         </button>
                       </div>
-                    )
-                  })}
-                </div>
-              )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
             )
           })}
