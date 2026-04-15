@@ -287,33 +287,33 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                   }
 
                   return (
-                    <div key={opt.id} className="flex items-center justify-between w-full py-3 border-b border-gray-100 last:border-0">
-                      <div className="flex flex-col">
-                        <div className="text-base font-medium text-gray-800">
+                    <div key={opt.id} className="pm-opt-row">
+                      <div className="pm-opt-info">
+                        <div className="pm-opt-name">
                           {opt.name}
                         </div>
                         {isVariable ? (
-                          <div className="mt-0.5"><span className="pm-price-varies">📐 varía</span></div>
+                          <div><span className="pm-price-varies">📐 varía</span></div>
                         ) : resolvedPrice > 0 ? (
-                          <div className="text-sm text-gray-500">
+                          <div className="pm-opt-price">
                             +{fmt(resolvedPrice)}
                           </div>
                         ) : null}
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="pm-opt-stepper">
                         <button
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 font-bold text-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          className="pm-opt-btn"
                           disabled={currentQty === 0}
                           onClick={() => handleModifyQty(mod, opt, -1)}
                         >
                           −
                         </button>
-                        <span className="w-4 text-center font-semibold text-gray-800">
+                        <span className="pm-opt-qty">
                           {currentQty}
                         </span>
                         <button
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 font-bold text-lg hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          className="pm-opt-btn"
                           disabled={disablePlus}
                           onClick={() => handleModifyQty(mod, opt, 1)}
                         >
