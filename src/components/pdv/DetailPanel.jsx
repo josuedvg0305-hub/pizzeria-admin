@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import ProductModal from './modals/ProductModal'
 import OrderPrintTemplate from './OrderPrintTemplate'
 import { useClients } from '../../context/ClientContext'
