@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import ProductModal from './modals/ProductModal'
 import OrderPrintTemplate from './OrderPrintTemplate'
 import { useClients } from '../../context/ClientContext'
+import { useSettings } from '../../context/SettingsContext'
+import { calculateDeliveryPrice } from '../../utils/deliveryCalculator'
 import './DetailPanel.css'
 
 /* ── Helpers ── */
@@ -125,6 +127,7 @@ const TYPE_OPTIONS = [
 export default function DetailPanel({ order, onClose, onAction, onDelete, onUpdate, onAddProducts, onTypeChange, categories, modifierGroups }) {
   useTick()
   const { clients, registerClientFromOrder } = useClients()
+  const { deliveryZones } = useSettings()
 
   /* Print state */
   const [printMode,  setPrintMode]  = useState(null)   // null | 'cocina' | 'cliente'
@@ -293,10 +296,44 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
   }
 
   const updateCharge = (key, val) => {
+    if (charges[key] === val) return
     const next = { ...charges, [key]: val }
     setCharges(next)
     pushCharges(next, discountMode, discountVal)
   }
+
+  /* ── Delivery Pricing dynamic calc ── */
+  const computeDeliveryCost = useCallback(async (addr) => {
+    if (!addr.trim()) return null
+    return await calculateDeliveryPrice(addr.trim(), deliveryZones)
+  }, [deliveryZones])
+
+  useEffect(() => {
+    let active = true
+
+    if (editType !== 'delivery') {
+      setTimeout(() => { if (active) updateCharge('delivery', 0) }, 0)
+      return () => { active = false }
+    }
+
+    if (!editAddr.trim()) {
+      setTimeout(() => { if (active) updateCharge('delivery', 0) }, 0)
+      return () => { active = false }
+    }
+
+    const timer = setTimeout(async () => {
+      const price = await computeDeliveryCost(editAddr)
+      if (active) {
+        updateCharge('delivery', price !== null ? price : 0)
+      }
+    }, 800)
+
+    return () => {
+      active = false
+      clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editType, editAddr, computeDeliveryCost])
 
   const updateDiscountMode = (mode) => {
     setDiscountMode(mode)
