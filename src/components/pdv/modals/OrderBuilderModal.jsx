@@ -323,16 +323,17 @@ export default function OrderBuilderModal({
                       <input
                         className="obm-phone-input"
                         placeholder="912345678"
-                        maxLength={9}
                         value={phone}
                         onChange={e => {
-                          setPhone(e.target.value.replace(/\D/g, ''))
+                          const cleaned = e.target.value.replace(/\D/g, '').slice(0, 9)
+                          setPhone(cleaned)
                           setShowPhoneSug(true)
                           setClientAddresses([])
                         }}
                         onFocus={() => setShowPhoneSug(true)}
                         onBlur={() => setTimeout(() => setShowPhoneSug(false), 150)}
                         autoComplete="off"
+                        inputMode="numeric"
                       />
                     </div>
                     {showPhoneSug && phone.length > 0 && (
