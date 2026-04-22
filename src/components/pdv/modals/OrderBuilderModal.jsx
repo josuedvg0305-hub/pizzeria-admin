@@ -183,10 +183,7 @@ export default function OrderBuilderModal({
 
   return (
     <>
-      <div
-        className="obm-overlay"
-        onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      >
+      <div className="obm-overlay">
         <div className="obm-modal">
 
           {/* ── Header ── */}
@@ -223,60 +220,64 @@ export default function OrderBuilderModal({
               })}
             </div>
 
-            {/* Col 2: Product grid */}
+            {/* Col 2: Product grid + search bar */}
             <div className="obm-products">
-              {displayProducts.length === 0 ? (
-                <div className="obm-no-products">
-                  {search.trim()
-                    ? `Sin resultados para "${search}"`
-                    : 'Sin productos en esta categoría'}
-                </div>
-              ) : (
-                <div className="obm-grid">
-                  {displayProducts.map(product => (
-                    <div
-                      key={product.id}
-                      className="obm-prod-card"
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      <div className="obm-prod-thumb">
-                        {(product.images?.[0] ?? product.image)
-                          ? <img src={product.images?.[0] ?? product.image} alt={product.name} />
-                          : <span>{FALLBACK_EMOJI[product.id] ?? '🍕'}</span>
-                        }
+
+              {/* Search bar — parte superior de la columna central */}
+              <div className="obm-col2-search">
+                <IconSearch />
+                <input
+                  placeholder="Buscar en el menú…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  autoComplete="off"
+                />
+                {search && (
+                  <button className="obm-col2-search-clear" onClick={() => setSearch('')}>✕</button>
+                )}
+              </div>
+
+              {/* Scroll area de la grilla */}
+              <div className="obm-products-scroll">
+                {displayProducts.length === 0 ? (
+                  <div className="obm-no-products">
+                    {search.trim()
+                      ? `Sin resultados para "${search}"`
+                      : 'Sin productos en esta categoría'}
+                  </div>
+                ) : (
+                  <div className="obm-grid">
+                    {displayProducts.map(product => (
+                      <div
+                        key={product.id}
+                        className="obm-prod-card"
+                        onClick={() => setSelectedProduct(product)}
+                      >
+                        <div className="obm-prod-thumb">
+                          {(product.images?.[0] ?? product.image)
+                            ? <img src={product.images?.[0] ?? product.image} alt={product.name} />
+                            : <span>{FALLBACK_EMOJI[product.id] ?? '🍕'}</span>
+                          }
+                        </div>
+                        <span className="obm-prod-name">{product.name}</span>
+                        {product.priceType === 'simple' ? (
+                          <span className="obm-prod-price">
+                            {fmt(product.promoPrice ?? product.price)}
+                          </span>
+                        ) : (
+                          <span className="obm-prod-price obm-prod-price--multi">
+                            Desde {fmt(Math.min(...product.variants.map(v => v.promoPrice ?? v.price)))}
+                          </span>
+                        )}
                       </div>
-                      <span className="obm-prod-name">{product.name}</span>
-                      {product.priceType === 'simple' ? (
-                        <span className="obm-prod-price">
-                          {fmt(product.promoPrice ?? product.price)}
-                        </span>
-                      ) : (
-                        <span className="obm-prod-price obm-prod-price--multi">
-                          Desde {fmt(Math.min(...product.variants.map(v => v.promoPrice ?? v.price)))}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Col 3: Summary */}
             <div className="obm-summary">
-
-              {/* Search */}
-              <div className="obm-search-wrap">
-                <IconSearch />
-                <input
-                  className="obm-search"
-                  placeholder="Buscar en el menú…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-                {search && (
-                  <button className="obm-search-clear" onClick={() => setSearch('')}>✕</button>
-                )}
-              </div>
 
               {/* Client section — create mode only, not flash */}
               {!isEdit && !isFlash && (
