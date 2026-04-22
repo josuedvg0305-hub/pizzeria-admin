@@ -34,14 +34,15 @@ export default function MenuPage() {
   const draggingCat = categories.find(c => String(c.id) === String(activeId))
 
   return (
-    <div className="menu-page h-full flex-1 overflow-y-auto pb-32">
-      {/* ── Page header ── */}
-      <header className="mp-header">
-        <div>
-          <h1 className="mp-title">Carta / Menú</h1>
-          <p className="mp-sub">Gestiona categorías, productos, precios y modificadores</p>
-        </div>
-        {tab === 'carta' && (
+    <div className="menu-page h-full flex-1 overflow-y-auto">
+      <div className="menu-page-content pb-32">
+        {/* ── Page header ── */}
+        <header className="mp-header">
+          <div>
+            <h1 className="mp-title">Carta / Menú</h1>
+            <p className="mp-sub">Gestiona categorías, productos, precios y modificadores</p>
+          </div>
+          {tab === 'carta' && (
           <button className="btn btn-primary" onClick={() => setShowAddCat(true)}>
             + Nueva categoría
           </button>
@@ -111,9 +112,10 @@ export default function MenuPage() {
 
       {tab === 'modificadores' && <ModifiersPanel />}
 
-      {showAddCat && (
-        <CategoryModal onClose={() => setShowAddCat(false)} />
-      )}
+        {showAddCat && (
+          <CategoryModal onClose={() => setShowAddCat(false)} />
+        )}
+      </div>
     </div>
   )
 }
