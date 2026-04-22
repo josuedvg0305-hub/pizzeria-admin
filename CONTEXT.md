@@ -929,3 +929,13 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - El componente `App.jsx` actúa como guardia: si `user` es nulo, la pantalla se encierra explícitamente en el `<Login />` anulando el acceso al enrutador de vistas, el Sidebar y cualquier Contexto dependiente de la interfaz.
 - La pantalla nativa `<Login />` está construida respetando la estética actual del proyecto (`var(--surface)`, `var(--brand)`) y maneja el feedback visual de errores como credenciales incorrectas.
 
+---
+
+## Sesión del 22 de Abril 2026 - Parte 2
+
+- **Refactorización del PDV** a diseño de pantalla completa anidado (3 columnas) bajo el header principal.
+- **Implementación de scroll independiente** (`overflow-y-auto`) para las columnas de Categorías, Productos y Ticket.
+- **Implementación de Scroll Continuo (Spy Scroll)** en la lista de productos y limpieza visual del sidebar (sin emojis ni contadores).
+- **Corrección del scroll en el módulo de Menú (Panel Admin)** para que ocupe todo el alto disponible y la barra quede al ras de la pantalla.
+- **Fix en el input del teléfono del cliente**: Regex `\D` implementado para limpiar espacios y caracteres especiales al pegar números desde WhatsApp, respetando el `maxLength`.
+
