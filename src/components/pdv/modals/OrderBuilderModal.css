@@ -1,9 +1,9 @@
-/* ── Full-Screen Panel (reemplaza el overlay+modal) ── */
+/* ── Full-Area Panel (contenido dentro de .app-main) ── */
 .obm-overlay {
-  position: fixed;
+  position: absolute;      /* se contiene en .app-main (position: relative) */
   inset: 0;
-  z-index: 1000;
-  display: flex;           /* centra el obm-modal que ahora es 100% */
+  z-index: 100;            /* encima del PDV pero debajo de otros modales */
+  display: flex;
   animation: obm-fade .15s ease;
 }
 

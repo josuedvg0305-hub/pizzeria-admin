@@ -14,8 +14,11 @@
 
 .app-main {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;        /* sin scroll global — cada módulo maneja su propio scroll */
   background: var(--surface3);
+  position: relative;      /* contexto de posicionamiento para el builder full-area */
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-header {
