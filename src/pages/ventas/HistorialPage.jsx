@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useOrders } from '../../context/OrdersContext'
 import SalesFilterDrawer, {
   INIT_SALES_FILTERS,
