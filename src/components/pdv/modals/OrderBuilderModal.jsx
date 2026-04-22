@@ -31,6 +31,11 @@ const CAT_EMOJI = {
   'Promos':            '🎁',
 }
 
+const cleanEmoji = (str) => {
+  if (!str) return '';
+  return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+}
+
 export default function OrderBuilderModal({
   orderType,
   orderNum,
@@ -109,20 +114,23 @@ export default function OrderBuilderModal({
 
   /* Phone auto-lookup replaced by live autocomplete — see JSX below */
 
-  /* Products shown in Col 2 */
-  const displayProducts = useMemo(() => {
+  /* Products mapped continuously by categories */
+  const displayCategories = useMemo(() => {
+    let cats = categories.map(cat => ({
+      ...cat,
+      products: (cat.products ?? []).filter(p => p.is_active !== false)
+    }))
+
     if (search.trim()) {
-      return categories.flatMap(c =>
-        (c.products ?? []).filter(
-          p => p.is_active !== false &&
-               p.name.toLowerCase().includes(search.toLowerCase())
-        )
-      )
+      const lowerSearch = search.toLowerCase()
+      cats = cats.map(cat => ({
+        ...cat,
+        products: cat.products.filter(p => p.name.toLowerCase().includes(lowerSearch))
+      }))
     }
-    const cat = categories.find(c => c.id === activeCatId)
-    // Only Front-End filter applied: ensure is_active isn't false
-    return cat ? (cat.products ?? []).filter(p => p.is_active !== false) : []
-  }, [categories, activeCatId, search])
+
+    return cats.filter(cat => cat.products.length > 0)
+  }, [categories, search])
 
   const handleProductAdd = (item) => {
     setItems(prev => [...prev, item])
@@ -204,17 +212,33 @@ export default function OrderBuilderModal({
             <div className="obm-cats">
               {categories.map(cat => {
                 const emoji = CAT_EMOJI[cat.name] ?? '🍽️'
-                const count = (cat.products ?? []).filter(p => p.active !== false).length
+                const cleanName = cleanEmoji(cat.name)
                 const isActive = activeCatId === cat.id && !search.trim()
                 return (
                   <button
                     key={cat.id}
                     className={`obm-cat-btn${isActive ? ' obm-cat-btn--active' : ''}`}
-                    onClick={() => { setActiveCatId(cat.id); setSearch('') }}
+                    onClick={() => {
+                      setActiveCatId(cat.id);
+                      setSearch('');
+                      setTimeout(() => {
+                        const el = document.getElementById('category-' + cat.id);
+                        if (el) {
+                          // Ajustamos el scroll container para scrollear hacia el elemento
+                          const container = document.querySelector('.obm-products-scroll');
+                          const headerOffset = 10; // offset visual adicional
+                          if (container) {
+                            const topPos = el.offsetTop - container.offsetTop - headerOffset;
+                            container.scrollTo({ top: topPos, behavior: 'smooth' });
+                          } else {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
+                        }
+                      }, 10);
+                    }}
                   >
                     <span className="obm-cat-emoji">{emoji}</span>
-                    <span className="obm-cat-name">{cat.name}</span>
-                    <span className="obm-cat-count">{count}</span>
+                    <span className="obm-cat-name">{cleanName}</span>
                   </button>
                 )
               })}
@@ -239,39 +263,47 @@ export default function OrderBuilderModal({
 
               {/* Scroll area de la grilla */}
               <div className="obm-products-scroll">
-                {displayProducts.length === 0 ? (
+                {displayCategories.length === 0 ? (
                   <div className="obm-no-products">
                     {search.trim()
                       ? `Sin resultados para "${search}"`
-                      : 'Sin productos en esta categoría'}
+                      : 'Sin productos disponibles'}
                   </div>
                 ) : (
-                  <div className="obm-grid">
-                    {displayProducts.map(product => (
-                      <div
-                        key={product.id}
-                        className="obm-prod-card"
-                        onClick={() => setSelectedProduct(product)}
-                      >
-                        <div className="obm-prod-thumb">
-                          {(product.images?.[0] ?? product.image)
-                            ? <img src={product.images?.[0] ?? product.image} alt={product.name} />
-                            : <span>{FALLBACK_EMOJI[product.id] ?? '🍕'}</span>
-                          }
+                  displayCategories.map(cat => {
+                    const rawName = cleanEmoji(cat.name);
+                    return (
+                      <div key={cat.id} id={`category-${cat.id}`} className="obm-category-section">
+                        <h2 className="obm-category-title">{rawName}</h2>
+                        <div className="obm-grid">
+                          {cat.products.map(product => (
+                            <div
+                              key={product.id}
+                              className="obm-prod-card"
+                              onClick={() => setSelectedProduct(product)}
+                            >
+                              <div className="obm-prod-thumb">
+                                {(product.images?.[0] ?? product.image)
+                                  ? <img src={product.images?.[0] ?? product.image} alt={product.name} />
+                                  : <span>{FALLBACK_EMOJI[product.id] ?? '🍕'}</span>
+                                }
+                              </div>
+                              <span className="obm-prod-name">{product.name}</span>
+                              {product.priceType === 'simple' ? (
+                                <span className="obm-prod-price">
+                                  {fmt(product.promoPrice ?? product.price)}
+                                </span>
+                              ) : (
+                                <span className="obm-prod-price obm-prod-price--multi">
+                                  Desde {fmt(Math.min(...product.variants.map(v => v.promoPrice ?? v.price)))}
+                                </span>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        <span className="obm-prod-name">{product.name}</span>
-                        {product.priceType === 'simple' ? (
-                          <span className="obm-prod-price">
-                            {fmt(product.promoPrice ?? product.price)}
-                          </span>
-                        ) : (
-                          <span className="obm-prod-price obm-prod-price--multi">
-                            Desde {fmt(Math.min(...product.variants.map(v => v.promoPrice ?? v.price)))}
-                          </span>
-                        )}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })
                 )}
               </div>
             </div>
