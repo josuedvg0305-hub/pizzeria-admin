@@ -34,7 +34,7 @@ export default function MenuPage() {
   const draggingCat = categories.find(c => String(c.id) === String(activeId))
 
   return (
-    <div className="menu-page">
+    <div className="menu-page h-full flex-1 overflow-y-auto pb-32">
       {/* ── Page header ── */}
       <header className="mp-header">
         <div>

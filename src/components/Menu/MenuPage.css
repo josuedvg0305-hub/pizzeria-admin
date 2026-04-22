@@ -1,4 +1,10 @@
-.menu-page { padding: 28px 32px; max-width: 1080px; }
+.menu-page { 
+  padding: 28px 32px 100px; /* pb-generoso */
+  max-width: 1080px; 
+  flex: 1; 
+  overflow-y: auto; 
+  height: 100%; 
+}
 
 /* ── Header ── */
 .mp-header {
