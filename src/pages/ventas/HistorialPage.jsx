@@ -35,14 +35,64 @@ function fmtDate(d) {
 }
 
 export default function HistorialPage() {
-  const { orders, updateOrder } = useOrders()
+  const { orders, updateOrder, fetchOrders } = useOrders()
 
+  const [quickFilter,   setQuickFilter]   = useState('today')
   const [dateFrom,      setDateFrom]      = useState('')
   const [dateTo,        setDateTo]        = useState('')
   const [salesFilters,  setSalesFilters]  = useState(INIT_SALES_FILTERS)
   const [showDrawer,    setShowDrawer]    = useState(false)
   const [originFilter,  setOriginFilter]  = useState('all')
   const [selectedOrder, setSelectedOrder] = useState(null)
+
+  // Cuando cambia el filtro rápido, calculamos fechas y cargamos de Supabase
+  useEffect(() => {
+    if (quickFilter === 'custom') return;
+
+    const now = new Date()
+    let startD = new Date(now)
+    let endD = new Date(now)
+
+    if (quickFilter === 'today') {
+      startD.setHours(0, 0, 0, 0)
+      endD.setHours(23, 59, 59, 999)
+    } else if (quickFilter === 'yesterday') {
+      startD.setDate(now.getDate() - 1); startD.setHours(0, 0, 0, 0)
+      endD.setDate(now.getDate() - 1); endD.setHours(23, 59, 59, 999)
+    } else if (quickFilter === '7days') {
+      startD.setDate(now.getDate() - 6); startD.setHours(0, 0, 0, 0)
+      endD.setHours(23, 59, 59, 999)
+    } else if (quickFilter === '14days') {
+      startD.setDate(now.getDate() - 13); startD.setHours(0, 0, 0, 0)
+      endD.setHours(23, 59, 59, 999)
+    } else if (quickFilter === '30days') {
+      startD.setDate(now.getDate() - 29); startD.setHours(0, 0, 0, 0)
+      endD.setHours(23, 59, 59, 999)
+    }
+
+    const fmtYMD = (d) => {
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+
+    // Actualizamos inputs locales pero de forma invisible si no es custom
+    setDateFrom(fmtYMD(startD))
+    setDateTo(fmtYMD(endD))
+
+    // Disparamos fetch a Supabase usando startD y endD
+    fetchOrders(startD, endD)
+  }, [quickFilter, fetchOrders])
+
+  const handleCustomSearch = () => {
+    if (!dateFrom || !dateTo) {
+      alert("Debes seleccionar ambas fechas"); return;
+    }
+    const start = new Date(dateFrom + 'T00:00:00')
+    const end = new Date(dateTo + 'T23:59:59.999')
+    fetchOrders(start, end)
+  }
 
   const handleUpdateOrder = (id, changes) => {
     updateOrder(id, changes);
@@ -59,15 +109,14 @@ export default function HistorialPage() {
 
     /* Date range */
     if (dateFrom) {
-      const from = new Date(dateFrom)
+      const from = new Date(dateFrom + 'T00:00:00')
       result = result.filter(o => {
         const d = o.createdAt instanceof Date ? o.createdAt : new Date(o.createdAt)
         return d >= from
       })
     }
     if (dateTo) {
-      const to = new Date(dateTo)
-      to.setHours(23, 59, 59, 999)
+      const to = new Date(dateTo + 'T23:59:59.999')
       result = result.filter(o => {
         const d = o.createdAt instanceof Date ? o.createdAt : new Date(o.createdAt)
         return d <= to
@@ -236,21 +285,41 @@ export default function HistorialPage() {
       {/* ── Top Toolbar ── */}
       <div className="hp-top-toolbar">
         <div className="hp-tt-left">
-          <input
-            type="date"
-            className="hp-date-input"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-          />
-          <span className="hp-tt-sep">-</span>
-          <input
-            type="date"
-            className="hp-date-input"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-          />
+          {/* Quick Date Filters Dropdown */}
+          <select 
+            className="hp-select-input"
+            style={{ fontWeight: 600, color: 'var(--text-main)', marginRight: '8px' }}
+            value={quickFilter}
+            onChange={(e) => setQuickFilter(e.target.value)}
+          >
+            <option value="today">Hoy</option>
+            <option value="yesterday">Ayer</option>
+            <option value="7days">Últimos 7 días</option>
+            <option value="14days">Últimos 14 días</option>
+            <option value="30days">Últimos 30 días</option>
+            <option value="custom">Personalizado</option>
+          </select>
 
-          <select className="hp-select-input" defaultValue="all_day">
+          {/* Solo se muestran los inputs si el filtro es 'Personalizado' */}
+          {quickFilter === 'custom' && (
+            <>
+              <input
+                type="date"
+                className="hp-date-input"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+              />
+              <span className="hp-tt-sep">-</span>
+              <input
+                type="date"
+                className="hp-date-input"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+              />
+            </>
+          )}
+
+          <select className="hp-select-input" defaultValue="all_day" style={{ marginLeft: quickFilter === 'custom' ? '8px' : '0' }}>
             <option value="all_day">Día entero</option>
           </select>
           <select className="hp-select-input" defaultValue="creation">
@@ -259,8 +328,13 @@ export default function HistorialPage() {
         </div>
 
         <div className="hp-tt-right">
-          <button className="btn btn-ghost btn-icon" title="Recargar">↻</button>
-          <button className="btn btn-ghost btn-icon" title="Buscar">🔍</button>
+          <button className="btn btn-ghost btn-icon" title="Recargar" onClick={() => fetchOrders()}>↻</button>
+          
+          {quickFilter === 'custom' && (
+            <button className="btn btn-secondary" title="Buscar fechas personalizadas" onClick={handleCustomSearch}>Buscar</button>
+          )}
+          
+          <button className="btn btn-ghost btn-icon" title="Buscar" style={{ display: quickFilter === 'custom' ? 'none' : 'inline-block' }}>🔍</button>
           <button className="btn btn-secondary">Reporte WhatsApp</button>
           <button className="btn btn-success" onClick={handleExportExcel}>Excel</button>
           <button className="btn btn-primary">Exportar</button>

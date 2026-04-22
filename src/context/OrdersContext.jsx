@@ -48,21 +48,41 @@ export function OrdersProvider({ children }) {
     ordersRef.current = orders
   }, [orders])
 
-  const fetchOrders = async () => {
-    const { data, error } = await supabase
+  const fetchOrders = useCallback(async (start = null, end = null) => {
+    let query = supabase
       .from('orders')
       .select('*')
-      .order('created_at', { ascending: false })
+
+    if (start) {
+      // Si recibimos fecha inicio, aplicamos filtro
+      query = query.gte('created_at', start.toISOString())
+    }
+    if (end) {
+      // Si recibimos fecha fin, aplicamos filtro
+      query = query.lte('created_at', end.toISOString())
+    }
+
+    // Siempre ordenamos descendente por creación
+    query = query.order('created_at', { ascending: false })
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching orders:', error)
     } else if (data) {
       setOrders(data.map(mapOrderFromDB))
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchOrders()
+    // Carga inicial por defecto: "Hoy" (desde 00:00:00 hasta 23:59:59)
+    const now = new Date()
+    const start = new Date(now)
+    start.setHours(0, 0, 0, 0)
+    const end = new Date(now)
+    end.setHours(23, 59, 59, 999)
+
+    fetchOrders(start, end)
 
     // Realtime Subscription
     const ordersChannel = supabase
@@ -133,7 +153,7 @@ export function OrdersProvider({ children }) {
   }, [])
 
   return (
-    <OrdersContext.Provider value={{ orders, addOrder, updateOrder, deleteOrder, getNextNum }}>
+    <OrdersContext.Provider value={{ orders, addOrder, updateOrder, deleteOrder, getNextNum, fetchOrders }}>
       {children}
     </OrdersContext.Provider>
   )
