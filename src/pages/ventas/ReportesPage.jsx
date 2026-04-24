@@ -273,8 +273,9 @@ export default function ReportesPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full p-6 md:p-8 bg-gray-50 overflow-y-auto">
-      <div className="flex flex-col gap-6">
+    <div className="w-full min-h-screen bg-gray-50 overflow-y-auto">
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex flex-col gap-6">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -499,6 +500,7 @@ export default function ReportesPage() {
         </SectionCard>
 
         <div className="h-2" />
+        </div>
       </div>
     </div>
   )
