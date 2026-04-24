@@ -7,10 +7,12 @@ Lee este archivo completo antes de escribir cualquier código. Contiene el stack
 ## Stack y configuración base
 
 - **React 19 + Vite 8** — sin router (navegación por estado `activePage` en App.jsx)
-- **Sin Tailwind** — CSS vanilla co-localizado por componente (cada `Componente.jsx` tiene su `Componente.css`)
+- **Tailwind CSS** — Estándar principal para todo el diseño de la interfaz.
 - **@dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities** — drag & drop en Menú y PDV
 - **DM Sans** — fuente vía `@import` en `index.css`
 - **Sin backend** — todo es estado local en React, sin localStorage (excepto el logo del sidebar)
+
+**Regla de Estilos:** El proyecto utiliza Tailwind CSS como estándar principal para todo el diseño de la interfaz. Todas las nuevas vistas, refactorizaciones y componentes DEBEN utilizar exclusivamente clases de utilidad de Tailwind (ej. flex, p-4, text-gray-800). NO se deben crear nuevos archivos .css separados a menos que sea para configuraciones globales del framework o animaciones extremadamente complejas que Tailwind no pueda manejar.
 
 ---
 
@@ -563,7 +565,7 @@ cancelado   → headerBg: #fef2f2  headerBorder: #fecaca
 
 ## Convenciones de código
 
-- **CSS co-localizado** — cada componente importa su propio `.css`. Sin módulos CSS.
+- **Tailwind CSS** — Todas las nuevas vistas y componentes deben usar exclusivamente Tailwind. No se deben crear nuevos archivos `.css`.
 - **Prefijos de clase**:
   - `otm-` OrderTypeModal · `obm-` OrderBuilderModal · `pm-` ProductModal PDV · `paym-` PaymentModal
   - `or-` OrderRow · `dp-` DetailPanel · `ol-` OrderList · `cb-` ChannelBar · `fb-` FilterBar · `fdr-` FilterDrawer
@@ -589,7 +591,7 @@ cancelado   → headerBg: #fef2f2  headerBorder: #fecaca
 | Archivo | Propósito |
 |---|---|
 | `src/components/pdv/OrderPrintTemplate.jsx` | Componente **solo presentacional**. Recibe `{ order, mode }`. Sin lógica de `window.print()`. |
-| `src/components/pdv/OrderPrintTemplate.css` | CSS co-localizado. Técnica `visibility` + selectores `.is-kitchen` para el modo cocina. |
+| `src/components/pdv/OrderPrintTemplate.css` | Técnica `visibility` + selectores `.is-kitchen` para el modo cocina. |
 
 ### Props de OrderPrintTemplate
 
@@ -679,9 +681,9 @@ Grilla de alta densidad (CSS Grid, sin `<table>`) sobre `OrdersContext`. Drawer 
 |---|---|
 | `src/context/SettingsContext.jsx` | Contexto de configuración global interactuando en tiempo real con Supabase. |
 | `src/components/settings/DeliveryMap.jsx` | Componente de mapa Google Maps inyectado nativamente. DrawingManager para polígonos. |
-| `src/components/settings/DeliveryMap.css` | Estilos co-localizados, prefijo `dmap-`. |
+| `src/components/settings/DeliveryMap.css` | Prefijo `dmap-`. |
 | `src/pages/settings/SettingsPage.jsx` | Página principal. Layout 2 columnas: mapa + sidebar de zonas. |
-| `src/pages/settings/SettingsPage.css` | Estilos co-localizados, prefijo `sp-`. |
+| `src/pages/settings/SettingsPage.css` | Prefijo `sp-`. |
 
 #### SettingsContext — shape heredado desde Supabase
 
@@ -744,7 +746,7 @@ El cálculo de envío se ejecuta en tiempo real durante la construcción del ped
 
 ## Lo que NO hacer
 
-- No usar Tailwind ni CSS modules
+- No crear nuevos archivos `.css` separados (usar Tailwind)
 - No instalar librerías de UI (shadcn, MUI, Chakra, etc.)
 - No agregar react-router — la navegación es por estado
 - No usar `<table>` para listas de datos — usar CSS Grid con divs (aplica a pedidos, clientes e historial)
