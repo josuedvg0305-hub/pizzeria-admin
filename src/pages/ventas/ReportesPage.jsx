@@ -12,6 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Label,
   BarChart,
   Bar,
 } from 'recharts'
@@ -223,15 +224,30 @@ function CustomPieTooltip({ active, payload }) {
 }
 
 // ─── Custom label en el centro del Donut ──────────────────────────────────
-
+// Renderizado vía prop content= en <Label> de recharts (patrón correcto).
+// El guard `if (!viewBox)` previene el crash cuando recharts pasa undefined
+// durante el primer ciclo de layout.
 function DonutCenterLabel({ viewBox, total }) {
+  if (!viewBox) return null
   const { cx, cy } = viewBox
   return (
     <g>
-      <text x={cx} y={cy - 6} textAnchor="middle" className="fill-gray-800" style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}>
+      <text
+        x={cx}
+        y={cy - 6}
+        textAnchor="middle"
+        fill="#111827"
+        style={{ fontSize: 22, fontWeight: 700, fontFamily: 'DM Sans, sans-serif' }}
+      >
         {total}
       </text>
-      <text x={cx} y={cy + 14} textAnchor="middle" className="fill-gray-400" style={{ fontSize: 11, fontFamily: 'DM Sans, sans-serif' }}>
+      <text
+        x={cx}
+        y={cy + 14}
+        textAnchor="middle"
+        fill="#9ca3af"
+        style={{ fontSize: 11, fontFamily: 'DM Sans, sans-serif' }}
+      >
         pedidos
       </text>
     </g>
@@ -453,7 +469,7 @@ export default function ReportesPage() {
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
-                      data={typeData}
+                      data={typeData.length > 0 ? typeData : []}
                       cx="50%"
                       cy="50%"
                       innerRadius={55}
@@ -464,7 +480,10 @@ export default function ReportesPage() {
                       {typeData.map((_, idx) => (
                         <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                       ))}
-                      <DonutCenterLabel total={kpis.totalOrders} />
+                      <Label
+                        content={<DonutCenterLabel total={kpis.totalOrders} />}
+                        position="center"
+                      />
                     </Pie>
                     <Tooltip content={<CustomPieTooltip />} />
                   </PieChart>
