@@ -941,3 +941,16 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - **Corrección del scroll en el módulo de Menú (Panel Admin)** para que ocupe todo el alto disponible y la barra quede al ras de la pantalla.
 - **Fix en el input del teléfono del cliente**: Regex `\D` implementado para limpiar espacios y caracteres especiales al pegar números desde WhatsApp, respetando el `maxLength`.
 
+---
+
+## Sesión del 24 de Abril 2026 - Reportes y Analíticas
+
+- **Dashboard de Reportes V2**: Implementado con éxito en `Reports.jsx` (ReportesPage.jsx).
+    - Incluye cálculo de 3 KPIs principales: Cantidad de Pedidos, Ventas Totales y Ticket Promedio.
+    - Lógica de comparación porcentual (%) automática contra el período anterior equivalente.
+    - Integración de `recharts` con protecciones contra estados de carga y datos nulos (previniendo crashes de `viewBox`).
+    - Selector de rangos de fecha funcional (Hoy, Ayer, 7d, 30d, Mes, Año).
+- **Deuda Técnica Crítica (Layout)**: Persiste un problema de solapamiento visual en el módulo de Reportes. El contenido no respeta el espacio del Sidebar (posicionamiento `fixed`). Se intentaron soluciones de compensación con `padding-left` y `margin-left` sin éxito definitivo.
+    - *Nota para futuras sesiones*: Es necesario revisar la estructura del contenedor Padre/Layout global para asegurar que el área de contenido principal sea empujada correctamente por el sidebar o migrar a una estructura de flexbox 100% robusta que evite el uso de `fixed` absoluto si no se maneja la compensación en el wrapper. No se recomienda seguir intentando parches de CSS local en el componente de Reportes hasta que el Layout base sea estable.
+
+
