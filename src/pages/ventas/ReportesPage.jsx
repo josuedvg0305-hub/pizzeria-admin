@@ -273,8 +273,8 @@ export default function ReportesPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="h-full overflow-y-auto bg-slate-50">
-      <div className="max-w-7xl mx-auto p-6 lg:p-8 flex flex-col gap-6">
+    <div className="h-full w-full overflow-y-auto bg-slate-50 p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-start justify-between gap-4">
