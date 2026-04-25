@@ -8,7 +8,25 @@ import {
 // ─── Helpers ───────────────────────────────────────────────────────────────
 const fmt  = (n) => `$${Number(n ?? 0).toLocaleString('es-CL')}`
 const fmtK = (v) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`
-const toDateStr = (d) => d.toISOString().split('T')[0]
+
+/**
+ * Convierte un Date al string YYYY-MM-DD usando la HORA LOCAL del navegador.
+ * NUNCA usar .toISOString() para agrupar días: eso usa UTC y mueve
+ * pedidos de las 21-23h (hora local UTC-4) al día siguiente.
+ */
+function localDateStr(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+/** Suma N días calendario a un Date (respeta DST). */
+function addDays(d, n) {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
 
 const RANGE_OPTIONS = [
   { label: 'Hoy',             value: '0'      },
@@ -29,34 +47,57 @@ const MONTH_NAMES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct'
 function getRange(value, customStart, customEnd) {
   const now = new Date()
   if (value === 'custom') {
+    // Forzar hora local explícita para evitar desfase TZ en Safari/Chrome
     const s = new Date(customStart + 'T00:00:00')
-    const e = new Date(customEnd   + 'T23:59:59')
+    const e = new Date(customEnd   + 'T23:59:59.999')
     return { start: s, end: e }
   }
-  const end = new Date(now); end.setHours(23,59,59,999)
-  let start = new Date(now)
-  if      (value === '0')     { start.setHours(0,0,0,0) }
-  else if (value === 'ayer')  { start.setDate(now.getDate()-1); start.setHours(0,0,0,0); end.setDate(now.getDate()-1); end.setHours(23,59,59,999) }
-  else if (value === 'month') { start = new Date(now.getFullYear(), now.getMonth(), 1) }
-  else if (value === 'year')  { start = new Date(now.getFullYear(), 0, 1) }
-  else { start.setDate(now.getDate() - parseInt(value)); start.setHours(0,0,0,0) }
+  if (value === '0') {
+    // HOY: desde medianoche local hasta ahora (nunca proyectar al futuro)
+    const start = new Date(now); start.setHours(0, 0, 0, 0)
+    const end   = new Date(now) // momento exacto actual
+    return { start, end }
+  }
+  if (value === 'ayer') {
+    const start = new Date(now); start.setDate(now.getDate() - 1); start.setHours(0, 0, 0, 0)
+    const end   = new Date(now); end.setDate(now.getDate() - 1);   end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }
+  if (value === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
+    // Fin = ayer (no proyectar días futuros dentro del mes)
+    const end   = new Date(now); end.setDate(now.getDate() - 1); end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }
+  if (value === 'year') {
+    const start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0)
+    // Fin = ayer (no proyectar meses/días futuros)
+    const end   = new Date(now); end.setDate(now.getDate() - 1); end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }
+  // Numérico ('7', '30'): D-N hasta D-1 (ayer) — nunca incluir hoy para evitar slots vacíos
+  const days  = parseInt(value, 10)
+  const start = new Date(now); start.setDate(now.getDate() - days); start.setHours(0, 0, 0, 0)
+  const end   = new Date(now); end.setDate(now.getDate() - 1);      end.setHours(23, 59, 59, 999)
   return { start, end }
 }
 
 function getPrevRange(value, customStart, customEnd) {
-  const { start, end } = getRange(value, customStart, customEnd)
-  const span = end - start
-  if (value === 'month') {
-    const now = new Date()
-    const pe  = new Date(now.getFullYear(), now.getMonth(), 0, 23,59,59,999)
-    const ps  = new Date(pe.getFullYear(), pe.getMonth(), 1)
-    return { start: ps, end: pe }
-  }
+  const { start: cs, end: ce } = getRange(value, customStart, customEnd)
+
   if (value === 'year') {
     const y = new Date().getFullYear() - 1
-    return { start: new Date(y,0,1), end: new Date(y,11,31,23,59,59,999) }
+    return { start: new Date(y, 0, 1, 0, 0, 0, 0), end: new Date(y, 11, 31, 23, 59, 59, 999) }
   }
-  return { start: new Date(start - span - 1), end: new Date(start - 1) }
+
+  // Contar días calendario exactos (sin usar ms para evitar drift de DST)
+  const msPerDay = 86_400_000
+  const spanDays = Math.round((ce - cs) / msPerDay) + 1 // días inclusivos
+
+  // Período anterior: termina el día antes del inicio del período actual
+  const pe = new Date(cs); pe.setDate(pe.getDate() - 1); pe.setHours(23, 59, 59, 999)
+  const ps = addDays(pe, -(spanDays - 1)); ps.setHours(0, 0, 0, 0)
+  return { start: ps, end: pe }
 }
 
 // ─── Agregaciones ──────────────────────────────────────────────────────────
@@ -86,60 +127,117 @@ function computeByType(curr, prev) {
   }))
 }
 
-// Convierte un array de pedidos en un mapa { 'YYYY-MM-DD' -> ventasAcumuladas }
+/**
+ * Agrupa pedidos por fecha LOCAL (no UTC).
+ * Retorna: { 'YYYY-MM-DD': ventasAcumuladas }
+ * USA localDateStr para que un pedido a las 23:00 hora local
+ * no salte al día siguiente por el offset UTC.
+ */
 function buildDailyMap(orders) {
   return orders.reduce((acc, o) => {
-    const key = toDateStr(new Date(o.created_at))
+    const key = localDateStr(new Date(o.created_at))
     acc[key] = (acc[key] ?? 0) + (o.total ?? 0)
     return acc
   }, {})
 }
 
-// Genera el array de slots de un período, iterando día a día (o mes a mes para 'year')
-function buildSlots(mapFn, value, start, end) {
-  const slots = []
-  const cur = new Date(start); cur.setHours(0, 0, 0, 0)
-  while (cur <= end) {
-    const key = toDateStr(cur)
-    const d   = new Date(cur)
-    let label
-    if      (value === 'year') label = MONTH_NAMES[d.getMonth()]
-    else if (value === '0')    label = `${d.getHours()}h`
-    else                       label = `${DAY_NAMES[d.getDay()]} ${d.getDate()}`
-    slots.push({ label, sales: mapFn(key) ?? 0 })
-    value === 'year'
-      ? cur.setMonth(cur.getMonth() + 1)
-      : cur.setDate(cur.getDate() + 1)
-  }
-  return slots
+/**
+ * Agrupa pedidos por mes (para 'year'): clave 'YYYY-MM'.
+ */
+function buildMonthlyMap(orders) {
+  return orders.reduce((acc, o) => {
+    const d   = new Date(o.created_at)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    acc[key] = (acc[key] ?? 0) + (o.total ?? 0)
+    return acc
+  }, {})
 }
 
 /**
- * Alineación por ÍNDICE POSICIONAL:
- * Ambos períodos tienen exactamente la misma cantidad de slots porque
- * getRange / getPrevRange garantizan rangos de igual duración.
- * Por eso unimos slot[i] actual con slot[i] anterior sin necesidad de
- * comparar fechas absolutas — "día 1 del período actual" siempre se
- * empareja con "día 1 del período anterior".
+ * Construye los slots del PERÍODO ACTUAL iterando día a día (hora a hora
+ * para 'hoy') y empareja cada slot con su contraparte en el período
+ * anterior mediante OFFSET DE DÍAS EXACTO (no índice posicional).
+ *
+ * Correcciones aplicadas:
+ *  1. Zona horaria: se agrupa con localDateStr (hora local, no UTC).
+ *  2. Sin proyección futura: getRange ya termina en ayer / ahora mismo.
+ *  3. Cruce por fecha real: se calcula offset = currDay − currStart (días
+ *     calendario) y se busca prevStart + offset en prevMap.
+ *     Esto es matemáticamente exacto incluso si los meses tienen
+ *     distintas longitudes (28 vs 31 días).
  */
 function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
   if (!currOrders.length && !prevOrders.length) return []
 
+  const { start: cs, end: ce } = getRange(value, cStart, cEnd)
+  const { start: ps }          = getPrevRange(value, cStart, cEnd)
+
+  // ── MODE: año → agrupar por mes ─────────────────────────────────────────
+  if (value === 'year') {
+    const currMap = buildMonthlyMap(currOrders)
+    const prevMap = buildMonthlyMap(prevOrders)
+    const result  = []
+    // Iterar los meses del período actual (desde cs hasta ce)
+    const cur = new Date(cs.getFullYear(), cs.getMonth(), 1)
+    while (cur.getFullYear() < ce.getFullYear() ||
+           (cur.getFullYear() === ce.getFullYear() && cur.getMonth() <= ce.getMonth())) {
+      const ym      = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+      const ymPrev  = `${ps.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`
+      result.push({
+        date:           MONTH_NAMES[cur.getMonth()],
+        ventasActual:   currMap[ym]   ?? 0,
+        ventasAnterior: prevMap[ymPrev] ?? 0,
+      })
+      cur.setMonth(cur.getMonth() + 1)
+    }
+    return result
+  }
+
+  // ── MODE: hoy → agrupar por hora ────────────────────────────────────────
+  if (value === '0') {
+    const currMap = {}
+    currOrders.forEach(o => {
+      const h = new Date(o.created_at).getHours()
+      currMap[h] = (currMap[h] ?? 0) + (o.total ?? 0)
+    })
+    const prevMap = {}
+    prevOrders.forEach(o => {
+      const h = new Date(o.created_at).getHours()
+      prevMap[h] = (prevMap[h] ?? 0) + (o.total ?? 0)
+    })
+    const nowHour = new Date().getHours()
+    return Array.from({ length: nowHour + 1 }, (_, h) => ({
+      date:           `${h}h`,
+      ventasActual:   currMap[h]  ?? 0,
+      ventasAnterior: prevMap[h]  ?? 0,
+    }))
+  }
+
+  // ── MODE: diario (7, 30, ayer, mes, custom) ──────────────────────────────
   const currMap = buildDailyMap(currOrders)
   const prevMap = buildDailyMap(prevOrders)
+  const result  = []
 
-  const { start: cs, end: ce } = getRange(value, cStart, cEnd)
-  const { start: ps, end: pe } = getPrevRange(value, cStart, cEnd)
+  const cur = new Date(cs); cur.setHours(0, 0, 0, 0)
+  const psDay = new Date(ps); psDay.setHours(0, 0, 0, 0)
 
-  const currSlots = buildSlots(k => currMap[k], value, cs, ce)
-  const prevSlots = buildSlots(k => prevMap[k], value, ps, pe)
+  while (cur <= ce) {
+    const currKey  = localDateStr(cur)
+    // Offset exacto en días calendario desde el inicio del período actual
+    const offsetMs  = cur.getTime() - new Date(cs.getFullYear(), cs.getMonth(), cs.getDate()).getTime()
+    const offsetDays = Math.round(offsetMs / 86_400_000)
+    // Fecha equivalente en el período anterior
+    const prevDay  = addDays(psDay, offsetDays)
+    const prevKey  = localDateStr(prevDay)
 
-  // Merge por índice — la etiqueta del eje X viene del período actual
-  return currSlots.map((slot, i) => ({
-    date:          slot.label,
-    ventasActual:  slot.sales,
-    ventasAnterior: prevSlots[i]?.sales ?? 0,
-  }))
+    result.push({
+      date:           `${DAY_NAMES[cur.getDay()]} ${cur.getDate()}`,
+      ventasActual:   currMap[currKey] ?? 0,
+      ventasAnterior: prevMap[prevKey] ?? 0,
+    })
+    cur.setDate(cur.getDate() + 1)
+  }
+  return result
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
@@ -271,7 +369,7 @@ function DonutCenter({ viewBox, total }) {
 
 // ─── Componente principal ──────────────────────────────────────────────────
 export default function ReportesPage() {
-  const today = toDateStr(new Date())
+  const today = localDateStr(new Date())
 
   const [range,       setRange]       = useState('7')
   const [customStart, setCustomStart] = useState(today)
