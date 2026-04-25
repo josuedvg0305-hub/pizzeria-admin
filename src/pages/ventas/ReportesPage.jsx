@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, Label,
 } from 'recharts'
 
@@ -86,28 +86,60 @@ function computeByType(curr, prev) {
   }))
 }
 
-function computeDaily(orders, value, cStart, cEnd) {
-  if (!orders.length) return []
-  const map = {}
-  orders.forEach(o => {
-    const d = new Date(o.created_at), key = toDateStr(d)
-    if (!map[key]) map[key] = { sales:0, orders:0, _date:d }
-    map[key].sales += o.total??0; map[key].orders++
-  })
-  const { start, end } = getRange(value, cStart, cEnd)
-  const out = []; const cur = new Date(start); cur.setHours(0,0,0,0)
+// Convierte un array de pedidos en un mapa { 'YYYY-MM-DD' -> ventasAcumuladas }
+function buildDailyMap(orders) {
+  return orders.reduce((acc, o) => {
+    const key = toDateStr(new Date(o.created_at))
+    acc[key] = (acc[key] ?? 0) + (o.total ?? 0)
+    return acc
+  }, {})
+}
+
+// Genera el array de slots de un período, iterando día a día (o mes a mes para 'year')
+function buildSlots(mapFn, value, start, end) {
+  const slots = []
+  const cur = new Date(start); cur.setHours(0, 0, 0, 0)
   while (cur <= end) {
-    const key  = toDateStr(cur)
-    const data = map[key] ?? { sales:0, orders:0, _date: new Date(cur) }
-    const d    = data._date
+    const key = toDateStr(cur)
+    const d   = new Date(cur)
     let label
     if      (value === 'year') label = MONTH_NAMES[d.getMonth()]
     else if (value === '0')    label = `${d.getHours()}h`
     else                       label = `${DAY_NAMES[d.getDay()]} ${d.getDate()}`
-    out.push({ date: label, sales: data.sales, orders: data.orders })
-    value === 'year' ? cur.setMonth(cur.getMonth()+1) : cur.setDate(cur.getDate()+1)
+    slots.push({ label, sales: mapFn(key) ?? 0 })
+    value === 'year'
+      ? cur.setMonth(cur.getMonth() + 1)
+      : cur.setDate(cur.getDate() + 1)
   }
-  return out
+  return slots
+}
+
+/**
+ * Alineación por ÍNDICE POSICIONAL:
+ * Ambos períodos tienen exactamente la misma cantidad de slots porque
+ * getRange / getPrevRange garantizan rangos de igual duración.
+ * Por eso unimos slot[i] actual con slot[i] anterior sin necesidad de
+ * comparar fechas absolutas — "día 1 del período actual" siempre se
+ * empareja con "día 1 del período anterior".
+ */
+function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
+  if (!currOrders.length && !prevOrders.length) return []
+
+  const currMap = buildDailyMap(currOrders)
+  const prevMap = buildDailyMap(prevOrders)
+
+  const { start: cs, end: ce } = getRange(value, cStart, cEnd)
+  const { start: ps, end: pe } = getPrevRange(value, cStart, cEnd)
+
+  const currSlots = buildSlots(k => currMap[k], value, cs, ce)
+  const prevSlots = buildSlots(k => prevMap[k], value, ps, pe)
+
+  // Merge por índice — la etiqueta del eje X viene del período actual
+  return currSlots.map((slot, i) => ({
+    date:          slot.label,
+    ventasActual:  slot.sales,
+    ventasAnterior: prevSlots[i]?.sales ?? 0,
+  }))
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
@@ -171,16 +203,44 @@ const EmptyState = ({ emoji='📊', label='Sin datos para este período' }) => (
   </div>
 )
 
-function LineTooltip({ active, payload, label }) {
+function ComparativeTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
+  const actual   = payload.find(p => p.dataKey === 'ventasActual')
+  const anterior = payload.find(p => p.dataKey === 'ventasAnterior')
+  const diff     = (actual?.value ?? 0) - (anterior?.value ?? 0)
+  const diffPct  = anterior?.value > 0
+    ? (diff / anterior.value) * 100
+    : actual?.value > 0 ? 100 : null
   return (
-    <div className="bg-white border border-gray-100 shadow-xl rounded-xl px-4 py-3 text-sm">
-      <p className="font-semibold text-gray-700 mb-1.5">{label}</p>
-      {payload.map(p => (
-        <p key={p.dataKey} style={{ color: p.color }} className="font-medium">
-          {p.dataKey === 'sales' ? `Ventas: ${fmt(p.value)}` : `Pedidos: ${p.value}`}
-        </p>
-      ))}
+    <div className="bg-white border border-gray-100 shadow-xl rounded-xl px-4 py-3.5 text-sm min-w-[180px]">
+      <p className="font-semibold text-gray-600 mb-2 text-xs uppercase tracking-wide">{label}</p>
+      {actual && (
+        <div className="flex items-center justify-between gap-4 mb-1">
+          <span className="flex items-center gap-1.5 text-gray-500">
+            <span className="w-2 h-2 rounded-full bg-[#C0392B] inline-block" />
+            Actual
+          </span>
+          <span className="font-bold text-gray-900">{fmt(actual.value)}</span>
+        </div>
+      )}
+      {anterior && (
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <span className="flex items-center gap-1.5 text-gray-400">
+            <span className="w-2 h-2 rounded-full bg-[#94a3b8] inline-block" />
+            Anterior
+          </span>
+          <span className="font-semibold text-gray-500">{fmt(anterior.value)}</span>
+        </div>
+      )}
+      {diffPct !== null && (
+        <div className={`text-xs font-semibold px-2 py-1 rounded-full text-center mt-1 ${
+          diff > 0 ? 'bg-emerald-50 text-emerald-600' :
+          diff < 0 ? 'bg-red-50 text-red-600' :
+          'bg-gray-100 text-gray-500'
+        }`}>
+          {diff > 0 ? '↑' : diff < 0 ? '↓' : '→'} {Math.abs(diffPct).toFixed(1)}% vs anterior
+        </div>
+      )}
     </div>
   )
 }
@@ -256,8 +316,8 @@ export default function ReportesPage() {
   const prevKpis = useMemo(() => computeKPIs(prevOrders), [prevOrders])
   const typeData  = useMemo(() => computeByType(orders, prevOrders), [orders, prevOrders])
   const dailyData = useMemo(
-    () => computeDaily(orders, range, applied.s, applied.e),
-    [orders, range, applied]
+    () => computeComparativeData(orders, prevOrders, range, applied.s, applied.e),
+    [orders, prevOrders, range, applied]
   )
 
   const dOrders = useMemo(() => pct(kpis.totalOrders, prevKpis.totalOrders), [kpis, prevKpis])
@@ -468,31 +528,75 @@ export default function ReportesPage() {
           </div>
         </div>
 
-        {/* ── FILA 3 · LineChart full-width ────────────────────────────────── */}
+        {/* ── FILA 3 · Comparative AreaChart full-width ─────────────────── */}
         <SectionCard title="Evolución de ventas">
+          {/* Leyenda manual encima del gráfico */}
+          {!loading && dailyData.length > 0 && (
+            <div className="flex items-center gap-5 mb-4">
+              <span className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
+                <span className="w-3 h-0.5 bg-[#C0392B] inline-block rounded" />
+                Período actual
+              </span>
+              <span className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                <span className="w-3 h-0.5 bg-[#94a3b8] inline-block rounded border-dashed" />
+                Período anterior
+              </span>
+            </div>
+          )}
           {loading ? <SkeletonBlock h="h-80" /> : dailyData.length === 0 ? (
             <EmptyState emoji="📉" label="Sin datos en este período" />
           ) : (
-            <div className="h-80">
+            <div className="h-80 min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dailyData} margin={{ top:5, right:20, left:5, bottom:0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="date" tick={{ fontSize:11, fill:'#9ca3af' }} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="sales" orientation="left" tick={{ fontSize:11, fill:'#9ca3af' }}
-                    tickLine={false} axisLine={false} tickFormatter={fmtK} width={52} />
-                  <YAxis yAxisId="orders" orientation="right" tick={{ fontSize:11, fill:'#9ca3af' }}
-                    tickLine={false} axisLine={false} width={36} />
-                  <Tooltip content={<LineTooltip />} />
-                  <Legend iconType="circle" iconSize={8}
-                    formatter={v => v === 'sales' ? 'Ventas' : 'Pedidos'}
-                    wrapperStyle={{ fontSize:12, color:'#6b7280', paddingTop:12 }} />
-                  <Line yAxisId="sales" type="monotone" dataKey="sales"
-                    stroke="#C0392B" strokeWidth={2.5} dot={false}
-                    activeDot={{ r:5, fill:'#C0392B', strokeWidth:0 }} />
-                  <Line yAxisId="orders" type="monotone" dataKey="orders"
-                    stroke="#2563eb" strokeWidth={2} strokeDasharray="5 3" dot={false}
-                    activeDot={{ r:4, fill:'#2563eb', strokeWidth:0 }} />
-                </LineChart>
+                <AreaChart data={dailyData} margin={{ top:5, right:10, left:0, bottom:0 }}>
+                  <defs>
+                    <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#C0392B" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#C0392B" stopOpacity={0.01} />
+                    </linearGradient>
+                    <linearGradient id="gradAnterior" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%"  stopColor="#94a3b8" stopOpacity={0.10} />
+                      <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize:11, fill:'#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tick={{ fontSize:11, fill:'#9ca3af' }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={fmtK}
+                    width={52}
+                  />
+                  <Tooltip content={<ComparativeTooltip />} />
+                  {/* Período anterior — debajo, suave, punteado */}
+                  <Area
+                    type="linear"
+                    dataKey="ventasAnterior"
+                    stroke="#94a3b8"
+                    strokeWidth={1.5}
+                    strokeDasharray="5 4"
+                    fill="url(#gradAnterior)"
+                    dot={false}
+                    activeDot={{ r:4, fill:'#94a3b8', strokeWidth:0 }}
+                  />
+                  {/* Período actual — encima, prominente, rojo brand */}
+                  <Area
+                    type="linear"
+                    dataKey="ventasActual"
+                    stroke="#C0392B"
+                    strokeWidth={2.5}
+                    fill="url(#gradActual)"
+                    dot={false}
+                    activeDot={{ r:5, fill:'#C0392B', strokeWidth:0 }}
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           )}
