@@ -46,11 +46,6 @@ function mapOrderToDB(o) {
 
 export function OrdersProvider({ children }) {
   const [orders, setOrders] = useState([])
-  const ordersRef = useRef(orders)
-
-  useEffect(() => {
-    ordersRef.current = orders
-  }, [orders])
 
   const fetchOrders = useCallback(async (start = null, end = null) => {
     let query = supabase
@@ -94,8 +89,11 @@ export function OrdersProvider({ children }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT') {
           setOrders(prev => {
-            // Deduplication inside the setOrders to avoid races from optimistic UI
-            if (prev.some(o => o.id === payload.new.id)) return prev;
+            // Deduplication inside the setOrders to avoid races from optimistic UI:
+            // if we optimistically inserted it, overwrite it with the official DB data
+            if (prev.some(o => o.id === payload.new.id)) {
+              return prev.map(o => o.id === payload.new.id ? mapOrderFromDB(payload.new) : o);
+            }
             // Sorting is slightly trickier with prev, but pushing it is safe if we prepend
             const newOrders = [mapOrderFromDB(payload.new), ...prev];
             // Enforce descending sort just in case
@@ -119,13 +117,18 @@ export function OrdersProvider({ children }) {
   }, [])
 
   const addOrder = useCallback(async (order) => {
-    // UI Optimistic insert
+    // UI Optimistic insert (num will be '---' or undefined until DB returns it)
     setOrders(prev => [{ deleted: false, ...order, createdAt: new Date() }, ...prev])
 
     const dbPayload = mapOrderToDB(order)
-    const { error } = await supabase.from('orders').insert(dbPayload)
+    delete dbPayload.num // Nos aseguramos de NO enviar el número para que Supabase lo genere
+
+    const { data, error } = await supabase.from('orders').insert(dbPayload).select().single()
     if (error) {
       console.error('Error adding order:', error)
+    } else if (data) {
+      // Actualizamos la orden optimista local con la oficial que ya trae el num asignado
+      setOrders(prev => prev.map(o => o.id === order.id ? mapOrderFromDB(data) : o))
     }
   }, [])
 
@@ -150,14 +153,8 @@ export function OrdersProvider({ children }) {
     }
   }, [])
 
-  const getNextNum = useCallback(() => {
-    // Se extrae del estado actual, fallback 1001
-    const maxNum = ordersRef.current.length > 0 ? Math.max(...ordersRef.current.map(o => o.num)) : 1000
-    return maxNum + 1
-  }, [])
-
   return (
-    <OrdersContext.Provider value={{ orders, addOrder, updateOrder, deleteOrder, getNextNum, fetchOrders }}>
+    <OrdersContext.Provider value={{ orders, addOrder, updateOrder, deleteOrder, fetchOrders }}>
       {children}
     </OrdersContext.Provider>
   )

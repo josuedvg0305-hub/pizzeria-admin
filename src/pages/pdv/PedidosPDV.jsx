@@ -29,7 +29,7 @@ const TYPE_TO_CHANNEL = {
 
 export default function PedidosPDV() {
   const { categories, modifierGroups } = useMenu()
-  const { orders, addOrder, updateOrder, deleteOrder, getNextNum } = useOrders()
+  const { orders, addOrder, updateOrder, deleteOrder } = useOrders()
   const { registerClientFromOrder } = useClients()
 
   const [selectedOrderId, setSelectedOrderId] = useState(null)
@@ -188,7 +188,7 @@ export default function PedidosPDV() {
   const handleSelectType = (orderType) => {
     const newOrder = {
       id:          crypto.randomUUID(),
-      num:         getNextNum(),
+      num:         '---',
       type:        orderType,
       status:      'pend',
       paid:        false,
@@ -207,7 +207,7 @@ export default function PedidosPDV() {
   const handleBuilderConfirm = (data) => {
     const base = pendingOrder ?? {
       id:        crypto.randomUUID(),
-      num:       getNextNum(),
+      num:       '---',
       type:      'local',
       status:    'pend',
       paid:      false,
