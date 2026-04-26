@@ -95,24 +95,50 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
   const unitPrice = basePrice + sumExtras
   const total     = unitPrice * qty
 
-  /* Form Validation */
+  /* Form Validation
+   * Must mirror the render-side filtering exactly:
+   *   1. Skip groups hidden by the variant filter.
+   *   2. Sum only options that are visible (active !== false).
+   * This prevents invisible groups from blocking submission and ensures the
+   * counted quantity matches exactly what the user can interact with.
+   */
   const isFormValid = useMemo(() => {
     if (vars.length > 0 && selectedVariant === null) return false;
 
     for (const mod of mods) {
+      // Skip inactive groups (same guard as in the render)
       if (mod.is_active === false) continue;
-      
-      const minRequired = mod.required ? Math.max(mod.min || 1, 1) : (mod.min || 0);
-      if (minRequired > 0) {
-        let groupSum = 0;
-        (mod.options || []).forEach(opt => {
-          groupSum += (modifierQuantities[opt.id] || 0);
-        });
-        if (groupSum < minRequired) return false;
+
+      // ── Replicate the variant-filter from the render ──────────────────────
+      if (currentVariantName) {
+        const sizeKeywords = ['Porción', 'Mediana', 'Familiar'];
+        const isGlobal      = !sizeKeywords.some(kw => mod.name.includes(kw));
+        const matchesVariant = mod.name.includes(currentVariantName);
+        // If this group is neither global nor matched to the current variant,
+        // the user cannot see it → skip validation for it.
+        if (!matchesVariant && !isGlobal) continue;
       }
+
+      // ── Only count options that are visible in the UI ─────────────────────
+      const visibleOpts = (mod.options ?? []).filter(o => o.active !== false);
+      if (visibleOpts.length === 0) continue; // nothing to interact with
+
+      // ── Sum of quantities for visible options in this group ───────────────
+      const groupSum = visibleOpts.reduce(
+        (acc, opt) => acc + (modifierQuantities[opt.id] || 0),
+        0
+      );
+
+      // ── Min check ────────────────────────────────────────────────────────
+      const minRequired = mod.required ? Math.max(mod.min || 1, 1) : (mod.min || 0);
+      if (minRequired > 0 && groupSum < minRequired) return false;
+
+      // ── Max check (optional safety guard) ────────────────────────────────
+      if (mod.max != null && mod.max > 0 && groupSum > mod.max) return false;
     }
+
     return true;
-  }, [mods, modifierQuantities, vars, selectedVariant]);
+  }, [mods, modifierQuantities, vars, selectedVariant, currentVariantName]);
 
   /* Handlers */
   const handleModifyQty = (mod, opt, delta) => {
