@@ -35,7 +35,7 @@
 
 /* ── Col 1: num / type / time / ago ── */
 .or-num {
-  font-size: 14px;
+  font-size: 16px;   /* 14→16 */
   font-weight: 700;
   color: var(--text);
   line-height: 1;
@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--muted);
   font-weight: 500;
 }
@@ -53,19 +53,19 @@
 .or-type-icon { font-size: 13px; line-height: 1; }
 
 .or-time {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: var(--muted);
   font-weight: 500;
 }
 
 .or-ago {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: #d97706;
   font-weight: 600;
 }
 
 .or-closed {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: var(--muted);
   font-weight: 500;
 }
@@ -73,7 +73,7 @@
 .or-sched {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;   /* 11→12 */
   font-weight: 600;
   color: #92400e;
   background: #fef3c7;
@@ -87,9 +87,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px;
+  padding: 5px 13px;  /* slightly taller for bigger text */
   border-radius: 99px;
-  font-size: 12px;
+  font-size: 13px;   /* 12→13 */
   font-weight: 600;
   align-self: flex-start;
 }
@@ -102,14 +102,14 @@
 
 /* ── Col 3: total ── */
 .or-total {
-  font-size: 15px;
+  font-size: 17px;   /* 15→17 */
   font-weight: 700;
   color: var(--text);
 }
 
 /* ── Col 4: client ── */
 .or-client-name {
-  font-size: 13.5px;
+  font-size: 15px;   /* 13.5→15 */
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
@@ -118,13 +118,13 @@
 }
 
 .or-client-phone {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: var(--muted);
   font-weight: 500;
 }
 
 .or-client-addr {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -134,7 +134,7 @@
 .or-paid-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;   /* 11→12 */
   font-weight: 600;
   background: #d1fae5;
   color: #065f46;
@@ -144,13 +144,13 @@
   margin-top: 1px;
 }
 
-.or-no-client { color: var(--muted); font-size: 13px; }
+.or-no-client { color: var(--muted); font-size: 14px; } /* 13→14 */
 
 /* ── Col 5: action buttons ── */
 .or-btn {
-  padding: 5px 11px;
+  padding: 6px 13px;  /* slightly more padding for bigger text */
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;   /* 12→13 */
   font-weight: 600;
   cursor: pointer;
   transition: background .13s, color .13s, opacity .13s;

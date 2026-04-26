@@ -47,7 +47,7 @@
 }
 
 .pm-header-title {
-  font-size: 15px;
+  font-size: 17px;   /* 15→17 */
   font-weight: 700;
   color: var(--text);
 }
@@ -111,20 +111,20 @@
 }
 
 .pm-product-name {
-  font-size: 15px;
+  font-size: 17px;   /* 15→17 */
   font-weight: 700;
   color: var(--text);
   line-height: 1.3;
 }
 
 .pm-product-desc {
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--muted);
   line-height: 1.45;
 }
 
 .pm-product-price {
-  font-size: 16px;
+  font-size: 18px;   /* 16→18 */
   font-weight: 800;
   color: #2563eb;
   margin-top: 2px;
@@ -147,13 +147,13 @@
 }
 
 .pm-section-title {
-  font-size: 13.5px;
+  font-size: 15px;   /* 13.5→15 */
   font-weight: 700;
   color: var(--text);
 }
 
 .pm-badge {
-  font-size: 10.5px;
+  font-size: 11.5px;   /* 10.5→11.5 */
   font-weight: 700;
   padding: 2px 9px;
   border-radius: 99px;
@@ -163,7 +163,7 @@
 .pm-badge--opt { background: var(--surface3); color: var(--muted); border: 1px solid var(--border); }
 
 .pm-section-hint {
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   color: var(--muted);
   margin-top: -2px;
 }
@@ -216,13 +216,13 @@
 
 .pm-radio-label {
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;   /* 13→14 */
   font-weight: 500;
   color: var(--text);
 }
 
 .pm-radio-price {
-  font-size: 13px;
+  font-size: 14px;   /* 13→14 */
   font-weight: 700;
   color: var(--text);
   flex-shrink: 0;
@@ -319,8 +319,8 @@
   box-sizing: border-box;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 7px 10px;
-  font-size: 12.5px;
+  padding: 8px 11px;
+  font-size: 14px;   /* 12.5→14 */
   font-family: inherit;
   color: var(--text);
   background: var(--surface);
@@ -376,7 +376,7 @@
 .pm-qty-val {
   min-width: 32px;
   text-align: center;
-  font-size: 15px;
+  font-size: 17px;   /* 15→17 */
   font-weight: 700;
   color: var(--text);
 }
@@ -384,12 +384,12 @@
 /* Add button */
 .pm-add-btn {
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 16px;  /* more vertical space */
   background: #2563eb;
   color: #fff;
   border: none;
   border-radius: var(--radius);
-  font-size: 14px;
+  font-size: 16px;   /* 14→16 */
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
@@ -421,13 +421,13 @@
 }
 
 .pm-opt-name {
-  font-size: 16px; /* text-base */
+  font-size: 17px; /* text-base→text-lg (16→17) */
   font-weight: 500; /* font-medium */
   color: #1f2937; /* text-gray-800 */
 }
 
 .pm-opt-price {
-  font-size: 14px; /* text-sm */
+  font-size: 15px; /* text-sm→text-base (14→15) */
   color: #6b7280; /* text-gray-500 */
   margin-top: 2px;
 }

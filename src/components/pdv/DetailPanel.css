@@ -31,7 +31,7 @@
 }
 
 .dp-order-num {
-  font-size: 16px;
+  font-size: 18px;   /* 16→18 */
   font-weight: 800;
   color: var(--text);
   letter-spacing: -.3px;
@@ -40,9 +40,9 @@
 .dp-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 4px 11px;   /* slightly taller */
   border-radius: 99px;
-  font-size: 11.5px;
+  font-size: 12.5px;   /* 11.5→12.5 */
   font-weight: 700;
 }
 
@@ -152,10 +152,10 @@
 
 .dp-type-row {
   display: flex; align-items: center; gap: 5px;
-  font-size: 13px; font-weight: 600; color: var(--text);
+  font-size: 14px; font-weight: 600; color: var(--text); /* 13→14 */
 }
 
-.dp-header-meta { font-size: 11.5px; color: var(--muted); }
+.dp-header-meta { font-size: 13px; color: var(--muted); } /* 11.5→13 */
 
 /* ── Scrollable body ── */
 .dp-body {
@@ -179,7 +179,7 @@
 }
 
 .dp-section-label {
-  font-size: 10.5px;
+  font-size: 12px;   /* 10.5→12 */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .6px;
@@ -191,9 +191,9 @@
   display: flex; align-items: flex-start; gap: 8px;
 }
 .dp-client-row svg { flex-shrink: 0; margin-top: 3px; color: var(--muted); }
-.dp-client-name  { display: block; font-size: 13.5px; font-weight: 600; color: var(--text); }
-.dp-client-phone { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
-.dp-client-addr  { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+.dp-client-name  { display: block; font-size: 15px; font-weight: 600; color: var(--text); }   /* 13.5→15 */
+.dp-client-phone { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }    /* 12→13 */
+.dp-client-addr  { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }    /* 12→13 */
 
 /* ── Products ── */
 .dp-add-products-btn {
@@ -201,15 +201,15 @@
   border: 1px solid var(--blue);
   color: var(--blue);
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 13px;   /* 11.5→13 */
   font-weight: 600;
-  padding: 2px 9px;
+  padding: 3px 10px;
   cursor: pointer;
   transition: background .12s;
 }
 .dp-add-products-btn:hover { background: #eff6ff; }
 
-.dp-no-items { font-size: 12.5px; color: var(--muted); margin: 0; }
+.dp-no-items { font-size: 14px; color: var(--muted); margin: 0; } /* 12.5→14 */
 
 .dp-items { display: flex; flex-direction: column; gap: 5px; }
 
@@ -224,7 +224,7 @@
 .dp-item:hover .dp-item-actions { opacity: 1; }
 
 .dp-item-qty {
-  font-size: 13px; font-weight: 700; color: var(--muted);
+  font-size: 14px; font-weight: 700; color: var(--muted); /* 13→14 */
   min-width: 22px; flex-shrink: 0;
 }
 
@@ -233,14 +233,14 @@
   display: flex; flex-direction: column; gap: 1px;
 }
 
-.dp-item-name    { font-size: 13px; font-weight: 600; color: var(--text); }
-.dp-item-variant { font-size: 11.5px; color: var(--muted); }
-.dp-item-mods    { font-size: 11px; color: var(--muted); font-style: italic; }
+.dp-item-name    { font-size: 15px; font-weight: 600; color: var(--text); }      /* 13→15 */
+.dp-item-variant { font-size: 13px; color: var(--muted); }                        /* 11.5→13 */
+.dp-item-mods    { font-size: 12px; color: var(--muted); font-style: italic; }    /* 11→12 */
 .dp-item-extra-lbl { color: #374151; font-style: normal; font-weight: 600; }
-.dp-item-note    { font-size: 11px; color: var(--muted); font-style: italic; }
+.dp-item-note    { font-size: 12px; color: var(--muted); font-style: italic; }    /* 11→12 */
 
 .dp-item-price {
-  font-size: 13px; font-weight: 700; color: var(--text);
+  font-size: 15px; font-weight: 700; color: var(--text); /* 13→15 */
   flex-shrink: 0; white-space: nowrap;
 }
 
@@ -276,7 +276,7 @@
   padding: 7px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--text);
   background: var(--surface);
   resize: none;
@@ -301,7 +301,7 @@
 .dp-charge-row:last-child { margin-bottom: 0; }
 
 .dp-charge-lbl {
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--text);
   flex: 1;
 }
@@ -341,7 +341,7 @@
   padding: 5px 8px 5px 22px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--text);
   background: var(--surface);
   text-align: right;
@@ -383,7 +383,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   color: var(--muted);
   padding: 2px 0;
 }
@@ -398,7 +398,7 @@
 }
 
 .dp-total-row--final {
-  font-size: 14.5px;
+  font-size: 16px;   /* 14.5→16 */
   font-weight: 800;
   color: var(--text);
   padding-top: 4px;
@@ -411,12 +411,12 @@
   display: flex; align-items: center; gap: 8px;
 }
 .dp-payment-method-label {
-  font-size: 13px; font-weight: 600; color: var(--text);
+  font-size: 14px; font-weight: 600; color: var(--text); /* 13→14 */
 }
 .dp-paid-badge {
   background: #d1fae5;
   color: #065f46;
-  font-size: 11px;
+  font-size: 12px;   /* 11→12 */
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 99px;
@@ -426,8 +426,8 @@
   display: flex; gap: 6px; flex-wrap: wrap;
 }
 .dp-method-chip {
-  font-size: 11.5px; font-weight: 600;
-  padding: 4px 11px;
+  font-size: 13px; font-weight: 600; /* 11.5→13 */
+  padding: 5px 12px;
   border: 1.5px solid var(--border);
   border-radius: 99px;
   color: var(--muted);
@@ -457,9 +457,9 @@
 .dp-btn {
   flex: 1;
   min-width: 80px;
-  padding: 8px 6px;
+  padding: 10px 8px;  /* more vertical padding for bigger text */
   border-radius: var(--radius);
-  font-size: 12.5px;
+  font-size: 14px;   /* 12.5→14 */
   font-weight: 700;
   cursor: pointer;
   transition: background .13s, opacity .13s;
