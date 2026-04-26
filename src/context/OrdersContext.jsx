@@ -4,37 +4,41 @@ import { supabase } from '../lib/supabase'
 const OrdersContext = createContext(null)
 
 // Mapper: DB -> Frontend
+// Canonical frontend field: `paymentMethod` (maps to DB column `payment_method`)
+// The legacy alias `payMethod` is intentionally NOT propagated here to prevent
+// dual-field confusion in the local state.
 function mapOrderFromDB(o) {
   return {
     ...o,
-    client: o.client_snapshot,
-    discountMode: o.discount_mode,
-    discountVal: o.discount_val,
-    paymentMethod: o.payment_method,
-    payMethod: o.payment_method, // legacy UI compatibility
-    createdAt: new Date(o.created_at),
-    closedAt: o.closed_at ? new Date(o.closed_at) : null,
-    scheduledAt: o.scheduled_at ? new Date(o.scheduled_at) : null,
+    client:        o.client_snapshot,
+    discountMode:  o.discount_mode,
+    discountVal:   o.discount_val,
+    paymentMethod: o.payment_method,   // single canonical field
+    createdAt:     new Date(o.created_at),
+    closedAt:      o.closed_at   ? new Date(o.closed_at)   : null,
+    scheduledAt:   o.scheduled_at ? new Date(o.scheduled_at) : null,
   }
 }
 
 // Mapper: Frontend -> DB
+// Only `paymentMethod` is the canonical frontend field; it maps to `payment_method`.
+// Any accidental `payMethod` key in the payload is stripped before hitting Supabase.
 function mapOrderToDB(o) {
   const dbData = { ...o }
-  
-  if (o.client !== undefined) { dbData.client_snapshot = o.client; delete dbData.client }
-  if (o.discountMode !== undefined) { dbData.discount_mode = o.discountMode; delete dbData.discountMode }
-  if (o.discountVal !== undefined) { dbData.discount_val = o.discountVal; delete dbData.discountVal }
-  if (o.paymentMethod !== undefined) { dbData.payment_method = o.paymentMethod; delete dbData.paymentMethod }
-  if (o.payMethod !== undefined && dbData.payment_method === undefined) { dbData.payment_method = o.payMethod }
-  // delete legacy dupes explicitly
-  delete dbData.payMethod
-  delete dbData.createdAt  // created_at defaults in DB
+
+  if (o.client         !== undefined) { dbData.client_snapshot = o.client;        delete dbData.client }
+  if (o.discountMode   !== undefined) { dbData.discount_mode   = o.discountMode;  delete dbData.discountMode }
+  if (o.discountVal    !== undefined) { dbData.discount_val    = o.discountVal;   delete dbData.discountVal }
+  if (o.paymentMethod  !== undefined) { dbData.payment_method  = o.paymentMethod; delete dbData.paymentMethod }
+
+  // Strip all legacy / frontend-only fields that must never reach the DB
+  delete dbData.payMethod      // legacy alias — canonical is payment_method
+  delete dbData.createdAt      // created_at is a DB default
   delete dbData.closedAt
   delete dbData.scheduledAt
 
-  // For Dates: mapping specifically in payload if sent explicitly
-  if (o.closedAt !== undefined) dbData.closed_at = o.closedAt instanceof Date ? o.closedAt.toISOString() : o.closedAt
+  // Date fields: only include in payload when explicitly supplied
+  if (o.closedAt    !== undefined) dbData.closed_at    = o.closedAt    instanceof Date ? o.closedAt.toISOString()    : o.closedAt
   if (o.scheduledAt !== undefined) dbData.scheduled_at = o.scheduledAt instanceof Date ? o.scheduledAt.toISOString() : o.scheduledAt
 
   return dbData

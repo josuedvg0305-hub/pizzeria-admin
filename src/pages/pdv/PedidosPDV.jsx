@@ -118,20 +118,37 @@ export default function PedidosPDV() {
   /* ── Actions ── */
   const handleOrderAction = (orderId, action) => {
     if (action === 'advance') {
-      const order = activeOrders.find(o => o.id === orderId)
+      // Always read from the live `orders` array to avoid stale closures
+      // when Supabase realtime events arrive between renders.
+      const order = orders.find(o => o.id === orderId && !o.deleted)
       if (!order) return
-      if (order.status === 'pend')        updateOrder(orderId, { status: 'preparacion' })
-      else if (order.status === 'preparacion') updateOrder(orderId, { status: 'listo' })
-      else if (order.status === 'listo') {
-        updateOrder(orderId, { status: 'finalizado', closedAt: new Date() })
-        if (selectedOrderId === orderId) {
-          setSelectedOrderId(null)
-        }
+
+      if (order.status === 'pend') {
+        updateOrder(orderId, { status: 'preparacion' })
+      } else if (order.status === 'preparacion') {
+        updateOrder(orderId, { status: 'listo' })
+      } else if (order.status === 'listo') {
+        // Carry forward payment fields so a concurrent realtime event
+        // cannot race and wipe them from the local optimistic state.
+        updateOrder(orderId, {
+          status:        'finalizado',
+          closedAt:      new Date(),
+          // Preserve payment data that may have been set before this transition
+          paid:          order.paid          ?? false,
+          paymentMethod: order.paymentMethod ?? null,
+        })
+        if (selectedOrderId === orderId) setSelectedOrderId(null)
       }
     } else if (action === 'cancel') {
-      updateOrder(orderId, { status: 'cancelado', closedAt: new Date() })
+      const order = orders.find(o => o.id === orderId && !o.deleted)
+      updateOrder(orderId, {
+        status:        'cancelado',
+        closedAt:      new Date(),
+        paid:          order?.paid          ?? false,
+        paymentMethod: order?.paymentMethod ?? null,
+      })
     } else if (action === 'pay') {
-      const order = activeOrders.find(o => o.id === orderId)
+      const order = orders.find(o => o.id === orderId && !o.deleted)
       if (order) { setPayingOrder(order); setModal('pay') }
     }
   }
@@ -245,14 +262,18 @@ export default function PedidosPDV() {
     setPendingOrder(null)
   }
 
-  const handlePaymentConfirm = ({ paymentMethod, payMethod, discount, tip, total: finalTotal }) => {
-    updateOrder(payingOrder.id, {
-      paid: true,
-      paymentMethod,
-      payMethod,
+  // NOTE: only `paymentMethod` is the canonical field (payMethod was a legacy alias).
+  // We capture the order ID at call-time instead of relying on the `payingOrder`
+  // closure which could be stale if a realtime event updated the order meanwhile.
+  const handlePaymentConfirm = ({ paymentMethod, discount, tip, total: finalTotal }) => {
+    const orderId = payingOrder?.id
+    if (!orderId) return
+    updateOrder(orderId, {
+      paid:          true,
+      paymentMethod,   // single canonical field → maps to payment_method in DB
       discount,
       tip,
-      total: finalTotal,
+      total:         finalTotal,
     })
     setModal(null)
     setPayingOrder(null)
