@@ -30,6 +30,23 @@ export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick }) {
   // Escuchar si cargó asíncronamente
   useEffect(() => {
     if (loaded) return
+
+    // Evitar múltiples inyecciones
+    if (!document.getElementById('gmaps-script')) {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+      if (!apiKey) {
+        console.error("VITE_GOOGLE_MAPS_API_KEY no está definida en .env")
+        return
+      }
+
+      const script = document.createElement('script')
+      script.id = 'gmaps-script'
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,places,geometry`
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
+
     const interval = setInterval(() => {
       if (window.google && window.google.maps) {
         setLoaded(true)
