@@ -197,10 +197,10 @@ export default function OrderBuilderModal({
           {/* ── Header ── */}
           <div className="obm-header">
             <div className="obm-header-left">
-              <span className="obm-title">{isEdit ? 'Agregar productos' : 'Nuevo pedido'}</span>
+              <span className="obm-title !text-lg !font-bold">{isEdit ? 'Agregar productos' : 'Nuevo pedido'}</span>
               <span className="obm-sep">—</span>
-              <span className="obm-num">#{orderNum}</span>
-              <span className="obm-type-tag">{TYPE_LABEL[orderType] ?? orderType}</span>
+              <span className="obm-num !text-lg !font-bold">#{orderNum}</span>
+              <span className="obm-type-tag !text-xs">{TYPE_LABEL[orderType] ?? orderType}</span>
             </div>
             <button className="obm-close" onClick={onClose} aria-label="Cerrar">✕</button>
           </div>
@@ -217,7 +217,7 @@ export default function OrderBuilderModal({
                 return (
                   <button
                     key={cat.id}
-                    className={`obm-cat-btn${isActive ? ' obm-cat-btn--active' : ''}`}
+                    className={`obm-cat-btn${isActive ? ' obm-cat-btn--active' : ''} !text-sm`}
                     onClick={() => {
                       setActiveCatId(cat.id);
                       setSearch('');
@@ -288,13 +288,13 @@ export default function OrderBuilderModal({
                                   : <span>{FALLBACK_EMOJI[product.id] ?? '🍕'}</span>
                                 }
                               </div>
-                              <span className="obm-prod-name">{product.name}</span>
+                              <span className="obm-prod-name !text-sm !font-semibold">{product.name}</span>
                               {product.priceType === 'simple' ? (
-                                <span className="obm-prod-price">
+                                <span className="obm-prod-price !text-sm !font-bold">
                                   {fmt(product.promoPrice ?? product.price)}
                                 </span>
                               ) : (
-                                <span className="obm-prod-price obm-prod-price--multi">
+                                <span className="obm-prod-price obm-prod-price--multi !text-xs">
                                   Desde {fmt(Math.min(...product.variants.map(v => v.promoPrice ?? v.price)))}
                                 </span>
                               )}
@@ -563,23 +563,23 @@ export default function OrderBuilderModal({
                 ) : (
                   items.map(item => (
                     <div key={item._key} className="obm-item-row">
-                      <span className="obm-item-qty">{item.qty}×</span>
+                      <span className="obm-item-qty !text-sm !font-bold">{item.qty}×</span>
                       <div className="obm-item-info">
-                        <span className="obm-item-name">{item.name}</span>
+                        <span className="obm-item-name !text-sm !font-semibold">{item.name}</span>
                         {item.variant && (
-                          <span className="obm-item-variant">({item.variant})</span>
+                          <span className="obm-item-variant !text-xs">({item.variant})</span>
                         )}
                         {item.modifiers?.length > 0 && (
-                          <span className="obm-item-mods">
+                          <span className="obm-item-mods !text-xs">
                             <span className="obm-item-extra-lbl">Extra: </span>
                             {item.modifiers.map(m => m.name).join(', ')}
                           </span>
                         )}
                         {item.note && (
-                          <span className="obm-item-note">📝 {item.note}</span>
+                          <span className="obm-item-note !text-xs">📝 {item.note}</span>
                         )}
                       </div>
-                      <span className="obm-item-total">{fmt(item.price * item.qty)}</span>
+                      <span className="obm-item-total !text-sm !font-bold">{fmt(item.price * item.qty)}</span>
                       <button
                         className="obm-item-remove"
                         onClick={() => removeItem(item._key)}
@@ -593,23 +593,23 @@ export default function OrderBuilderModal({
               {/* Footer */}
               <div className="obm-footer">
                 {isDelivery && Number(deliveryCost) > 0 && (
-                  <div className="obm-total-row">
+                  <div className="obm-total-row !text-sm">
                     <span>Subtotal ítems</span>
                     <span>{fmt(itemsSubtotal)}</span>
                   </div>
                 )}
                 {isDelivery && Number(deliveryCost) > 0 && (
-                  <div className="obm-total-row">
+                  <div className="obm-total-row !text-sm">
                     <span>Costo de envío</span>
                     <span>{fmt(deliveryCost)}</span>
                   </div>
                 )}
-                <div className="obm-total-row">
+                <div className="obm-total-row !text-base !font-semibold">
                   <span>Total</span>
-                  <span className="obm-total-amount">{fmt(total)}</span>
+                  <span className="obm-total-amount !text-2xl !font-extrabold">{fmt(total)}</span>
                 </div>
                 <button
-                  className="obm-confirm-btn"
+                  className="obm-confirm-btn !text-base !font-bold"
                   onClick={handleConfirm}
                   disabled={items.length === 0}
                 >

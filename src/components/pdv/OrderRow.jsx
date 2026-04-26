@@ -70,26 +70,26 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
 
   /* ── Time display ── */
   const timeNode = isDone
-    ? <span className="or-closed">Cerrado {fmtTime(order.closedAt)}</span>
-    : <span className="or-ago">{agoText(order.createdAt)}</span>
+    ? <span className="or-closed !text-sm">Cerrado {fmtTime(order.closedAt)}</span>
+    : <span className="or-ago !text-sm">{agoText(order.createdAt)}</span>
 
   /* ── Primary action button ── */
   let primaryBtn = null
   if (order.status === 'pend') {
     primaryBtn = (
-      <button className="or-btn or-btn--accept" onClick={() => onAction('advance')}>
+      <button className="or-btn or-btn--accept !text-sm !font-bold" onClick={() => onAction('advance')}>
         ▶ Aceptar
       </button>
     )
   } else if (order.status === 'preparacion') {
     primaryBtn = (
-      <button className="or-btn or-btn--prep" onClick={() => onAction('advance')}>
+      <button className="or-btn or-btn--prep !text-sm !font-bold" onClick={() => onAction('advance')}>
         🍕 Listo
       </button>
     )
   } else if (order.status === 'listo') {
     primaryBtn = (
-      <button className="or-btn or-btn--finish" onClick={() => onAction('advance')}>
+      <button className="or-btn or-btn--finish !text-sm !font-bold" onClick={() => onAction('advance')}>
         ✓ Finalizar
       </button>
     )
@@ -105,45 +105,45 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
     >
       {/* ── FECHA / TIPO ── */}
       <div className="or-cell">
-        <span className="or-num">#{order.num}</span>
-        <span className="or-type">
+        <span className="or-num !text-lg !font-bold">#{order.num}</span>
+        <span className="or-type !text-sm">
           <span className="or-type-icon">{tc.icon}</span>
           {tc.label}
         </span>
-        <span className="or-time">{fmtTime(order.createdAt)}</span>
+        <span className="or-time !text-sm">{fmtTime(order.createdAt)}</span>
         {order.scheduledAt && (
-          <span className="or-sched">{fmtSchedLabel(order.scheduledAt)}</span>
+          <span className="or-sched !text-xs">{fmtSchedLabel(order.scheduledAt)}</span>
         )}
         {timeNode}
       </div>
 
       {/* ── ESTADO ── */}
       <div className="or-cell">
-        <span className={`or-badge ${state.cls}`}>{state.label}</span>
+        <span className={`or-badge ${state.cls} !text-sm`}>{state.label}</span>
       </div>
 
       {/* ── TOTAL ── */}
       <div className="or-cell">
-        <span className="or-total">{fmt(order.total)}</span>
+        <span className="or-total !text-xl !font-bold">{fmt(order.total)}</span>
       </div>
 
       {/* ── CLIENTE ── */}
       <div className="or-cell">
         {order.client?.name ? (
           <>
-            <span className="or-client-name">{order.client.name}</span>
+            <span className="or-client-name !text-base !font-semibold">{order.client.name}</span>
             {order.client.phone && (
-              <span className="or-client-phone">{fmtPhone(order.client.phone)}</span>
+              <span className="or-client-phone !text-sm">{fmtPhone(order.client.phone)}</span>
             )}
             {order.client.addr && (
-              <span className="or-client-addr">{order.client.addr}</span>
+              <span className="or-client-addr !text-sm">{order.client.addr}</span>
             )}
             {order.paid && order.paymentMethod && (
-              <span className="or-paid-badge">💳 {order.paymentMethod} · Cobrado</span>
+              <span className="or-paid-badge !text-xs">💳 {order.paymentMethod} · Cobrado</span>
             )}
           </>
         ) : (
-          <span className="or-no-client">—</span>
+          <span className="or-no-client !text-sm">—</span>
         )}
       </div>
 
@@ -151,7 +151,7 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
       <div className="or-cell or-cell--actions" onClick={e => e.stopPropagation()}>
         {showCancel && (
           <button
-            className="or-btn or-btn--cancel"
+            className="or-btn or-btn--cancel !text-sm !font-semibold"
             onClick={() => onAction('cancel')}
             title="Cancelar pedido"
           >
@@ -160,7 +160,7 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
         )}
         {showPay && (
           <button
-            className="or-btn or-btn--pay"
+            className="or-btn or-btn--pay !text-sm !font-semibold"
             onClick={() => onAction('pay')}
             title="Cobrar pedido"
           >

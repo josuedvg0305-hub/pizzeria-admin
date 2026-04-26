@@ -366,8 +366,8 @@ export default function HistorialPage() {
         <button className="btn btn-blue hp-resumen-btn">Resumen de caja ▾</button>
 
         <div className="hp-st-summary">
-          <span>Pedidos: {summary.count}</span>
-          <span className="hp-st-total">Total: {fmt(summary.total)}</span>
+          <span className="!text-base">Pedidos: {summary.count}</span>
+          <span className="hp-st-total !text-base !font-bold">Total: {fmt(summary.total)}</span>
           <IconEye />
         </div>
       </div>
@@ -401,25 +401,25 @@ export default function HistorialPage() {
                   >
                     {/* ID / ESTADO */}
                     <div className="hp-cell-col">
-                      <span className="hp-row-num">#{order.num}</span>
-                      <span className={`hp-status-badge hp-status--${order.status}`}>
+                      <span className="hp-row-num !text-base !font-bold">#{order.num}</span>
+                      <span className={`hp-status-badge hp-status--${order.status} !text-xs`}>
                         {STATUS_LABEL[order.status] ?? order.status}
                       </span>
                     </div>
 
                     {/* ORIGEN */}
                     <div className="hp-cell-col">
-                      <span className="hp-text-main">{order.origin ?? 'PDV'}</span>
-                      <span className="hp-text-muted">{TYPE_LABEL[order.type] ?? order.type}</span>
+                      <span className="hp-text-main !text-sm">{order.origin ?? 'PDV'}</span>
+                      <span className="hp-text-muted !text-xs">{TYPE_LABEL[order.type] ?? order.type}</span>
                     </div>
 
                     {/* FECHAS */}
                     <div className="hp-cell-col">
-                      <span className="hp-text-main">
+                      <span className="hp-text-main !text-sm">
                          📅 {fmtDate(order.createdAt)}
                       </span>
                       {order.closedAt && (
-                        <span className="hp-text-muted">
+                        <span className="hp-text-muted !text-xs">
                           🏁 {fmtDate(order.closedAt)}
                         </span>
                       )}
@@ -429,30 +429,30 @@ export default function HistorialPage() {
                     <div className="hp-cell-col">
                       {order.client?.name || order.client?.phone ? (
                         <>
-                          {order.client.name && <span className="hp-text-main">{order.client.name}</span>}
-                          {order.client.phone && <span className="hp-text-muted">+56 {order.client.phone}</span>}
+                          {order.client.name && <span className="hp-text-main !text-sm !font-semibold">{order.client.name}</span>}
+                          {order.client.phone && <span className="hp-text-muted !text-xs">+56 {order.client.phone}</span>}
                         </>
                       ) : (
-                        <span className="hp-text-muted">Sin cliente</span>
+                        <span className="hp-text-muted !text-xs">Sin cliente</span>
                       )}
                     </div>
 
                     {/* PAGO / MÉTODO */}
                     <div className="hp-cell-col">
-                      <span className={`hp-paid-status ${order.paid ? 'is-paid' : 'is-unpaid'}`}>
+                      <span className={`hp-paid-status ${order.paid ? 'is-paid' : 'is-unpaid'} !text-sm !font-semibold`}>
                         {order.paid ? '✓ Pagado' : 'Pendiente'}
                       </span>
                       {order.paymentMethod || order.payMethod ? (
-                        <span className="hp-text-muted">{order.paymentMethod ?? order.payMethod}</span>
+                        <span className="hp-text-muted !text-xs">{order.paymentMethod ?? order.payMethod}</span>
                       ) : (
-                        <span className="hp-text-muted">—</span>
+                        <span className="hp-text-muted !text-xs">—</span>
                       )}
                     </div>
 
                     {/* TOTAL */}
-                    <div className="hp-cell-col hp-col-right hp-text-bold">
+                    <div className="hp-cell-col hp-col-right hp-text-bold !text-base !font-bold">
                       {fmt(order.total)}
-                      {isDeleted && <div className="hp-text-muted" style={{fontSize: '11px'}}>Eliminado</div>}
+                      {isDeleted && <div className="hp-text-muted !text-xs">Eliminado</div>}
                     </div>
                   </div>
                 )

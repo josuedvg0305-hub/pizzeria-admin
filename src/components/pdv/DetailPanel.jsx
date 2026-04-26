@@ -514,8 +514,8 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
       >
         <div className="dp-header-top">
           <div className="dp-header-left">
-            <span className="dp-order-num">#{order.num}</span>
-            <span className={`dp-badge ${state.badgeCls}`}>{state.label}</span>
+            <span className="dp-order-num !text-xl !font-extrabold">#{order.num}</span>
+            <span className={`dp-badge ${state.badgeCls} !text-xs !font-bold`}>{state.label}</span>
             {!order.scheduledAt && !schedEdit && (
               <button
                 className="dp-sched-badge dp-sched-badge--empty"
@@ -603,7 +603,7 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
           </div>
         )}
         <div className="dp-header-sub">
-          <span className="dp-type-row">
+          <span className="dp-type-row !text-sm !font-semibold">
             <span>{tc.icon}</span>
             <span>{tc.label}</span>
             {canEditType && !typeEdit && (
@@ -729,12 +729,12 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
             <div className="dp-client-row">
               <IconUser />
               <div style={{ flex: 1 }}>
-                <span className="dp-client-name">{order.client?.name || '—'}</span>
+                <span className="dp-client-name !text-base !font-semibold">{order.client?.name || '—'}</span>
                 {order.client?.phone && (
-                  <span className="dp-client-phone">{fmtPhone(order.client.phone)}</span>
+                  <span className="dp-client-phone !text-sm">{fmtPhone(order.client.phone)}</span>
                 )}
                 {order.client?.addr && (
-                  <span className="dp-client-addr">{order.client.addr}</span>
+                  <span className="dp-client-addr !text-sm">{order.client.addr}</span>
                 )}
               </div>
               {!isDone && (
@@ -867,12 +867,12 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
             <div className="dp-items">
               {order.items.map((item, i) => (
                 <div key={`${item.id}-${i}`} className="dp-item">
-                  <div className="dp-item-qty">{item.qty}×</div>
+                  <div className="dp-item-qty !text-sm !font-bold">{item.qty}×</div>
                   <div className="dp-item-info">
-                    <span className="dp-item-name">{item.name}</span>
-                    {item.variant && <span className="dp-item-variant">{item.variant}</span>}
+                    <span className="dp-item-name !text-base !font-semibold">{item.name}</span>
+                    {item.variant && <span className="dp-item-variant !text-sm">{item.variant}</span>}
                     {((item.mods?.length > 0) || (item.modifiers?.length > 0)) && (
-                      <span className="dp-item-mods">
+                      <span className="dp-item-mods !text-xs">
                         <span className="dp-item-extra-lbl">Extra: </span>
                         {(item.mods?.length > 0
                           ? item.mods
@@ -881,10 +881,10 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
                       </span>
                     )}
                     {item.note && (
-                      <span className="dp-item-note">📝 {item.note}</span>
+                      <span className="dp-item-note !text-xs">📝 {item.note}</span>
                     )}
                   </div>
-                  <span className="dp-item-price">{fmt(item.total)}</span>
+                  <span className="dp-item-price !text-base !font-bold">{fmt(item.total)}</span>
                   {!isDone && (
                     <div className="dp-item-actions">
                       <button
@@ -1050,7 +1050,7 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
             </div>
           )}
           <div className="dp-total-divider" />
-          <div className="dp-total-row dp-total-row--final">
+          <div className="dp-total-row dp-total-row--final !text-lg !font-extrabold">
             <span>TOTAL</span>
             <span>{fmt(total)}</span>
           </div>
@@ -1088,23 +1088,23 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
       <div className="dp-footer" style={{ flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
           {(order.status === 'pend' || order.status === 'preparacion' || order.status === 'listo') && (
-            <button className="dp-btn dp-btn--cancel" style={{ flex: 1 }} onClick={() => onAction(order.id, 'cancel')}>
+            <button className="dp-btn dp-btn--cancel !text-sm !font-bold" style={{ flex: 1 }} onClick={() => onAction(order.id, 'cancel')}>
               Cancelar
             </button>
           )}
           {(order.status === 'pend' || order.status === 'preparacion' || order.status === 'listo') && !order.paid && (
-            <button className="dp-btn dp-btn--pay" style={{ flex: 1 }} onClick={() => onAction(order.id, 'pay')}>
+            <button className="dp-btn dp-btn--pay !text-sm !font-bold" style={{ flex: 1 }} onClick={() => onAction(order.id, 'pay')}>
               Cobrar
             </button>
           )}
 
           {(order.status === 'pend' || order.status === 'preparacion') && (
-            <button className="dp-btn" style={{ flex: 1.5, background: '#2563eb', color: '#fff', border: 'none' }} onClick={() => onUpdate(order.id, { status: 'listo' })}>
+            <button className="dp-btn !text-sm !font-bold" style={{ flex: 1.5, background: '#2563eb', color: '#fff', border: 'none' }} onClick={() => onUpdate(order.id, { status: 'listo' })}>
               Listo!
             </button>
           )}
           {order.status === 'listo' && (
-            <button className="dp-btn dp-btn--cancel" style={{ flex: 1.5, borderColor: '#2563eb', color: '#2563eb' }} onClick={() => onUpdate(order.id, { status: 'preparacion' })}>
+            <button className="dp-btn dp-btn--cancel !text-sm !font-bold" style={{ flex: 1.5, borderColor: '#2563eb', color: '#2563eb' }} onClick={() => onUpdate(order.id, { status: 'preparacion' })}>
               ← Preparación
             </button>
           )}
@@ -1112,8 +1112,8 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
 
         {(order.status === 'pend' || order.status === 'preparacion' || order.status === 'listo') && (
           <button 
-            className="dp-btn" 
-            style={{ width: '100%', background: '#16a34a', color: '#fff', border: 'none', padding: '12px', marginTop: '8px', fontSize: '14px', fontWeight: '700' }} 
+            className="dp-btn !text-base !font-extrabold" 
+            style={{ width: '100%', background: '#16a34a', color: '#fff', border: 'none', padding: '12px', marginTop: '8px', fontWeight: '700' }} 
             onClick={() => {
               onUpdate(order.id, { status: 'finalizado', closedAt: new Date() });
               onClose();

@@ -206,7 +206,7 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
 
         {/* ── Header ── */}
         <div className="pm-header">
-          <span className="pm-header-title">{product.name}</span>
+          <span className="pm-header-title !text-xl !font-bold">{product.name}</span>
           <button className="pm-close" onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
 
@@ -222,11 +222,11 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
               }
             </div>
             <div className="pm-product-meta">
-              <span className="pm-product-name">{product.name}</span>
+              <span className="pm-product-name !text-lg !font-bold">{product.name}</span>
               {product.description && (
-                <span className="pm-product-desc">{product.description}</span>
+                <span className="pm-product-desc !text-sm">{product.description}</span>
               )}
-              <span className="pm-product-price">{fmt(basePrice)}</span>
+              <span className="pm-product-price !text-xl !font-bold">{fmt(basePrice)}</span>
             </div>
           </div>
 
@@ -242,10 +242,10 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
             return (
               <div className="pm-section">
                 <div className="pm-section-head">
-                  <span className="pm-section-title">{title}</span>
-                  <span className="pm-badge pm-badge--req">Obligatorio</span>
+                  <span className="pm-section-title !text-base !font-bold">{title}</span>
+                  <span className="pm-badge pm-badge--req !text-xs !font-bold">Obligatorio</span>
                 </div>
-                <span className="pm-section-hint">Seleccione mínimo 1 opción</span>
+                <span className="pm-section-hint !text-sm">Seleccione mínimo 1 opción</span>
               <div className="pm-radio-list">
                 {vars.map((v, vi) => {
                   const sel = selectedVariant === vi
@@ -258,15 +258,15 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                       <span className={`pm-radio-circle${sel ? ' pm-radio-circle--sel' : ''}`}>
                         {sel && <span className="pm-radio-dot" />}
                       </span>
-                      <span className="pm-radio-label">{v.name}</span>
-                      <span className="pm-radio-price">{fmt(v.promoPrice ?? v.price)}</span>
+                      <span className="pm-radio-label !text-base">{v.name}</span>
+                      <span className="pm-radio-price !text-base !font-bold">{fmt(v.promoPrice ?? v.price)}</span>
                     </div>
                   )
                 })}
               </div>
               {/* Hint when no variant selected yet and variant-priced extras exist */}
               {selectedVariant === null && hasVariantPricedOptions && (
-                <p className="pm-variant-price-hint">
+                <p className="pm-variant-price-hint !text-sm">
                   💡 Elige el tamaño para ver el precio de los extras
                 </p>
               )}
@@ -292,15 +292,15 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
             return (
             <div key={mod.id} className="pm-section">
               <div className="pm-section-head">
-                <span className="pm-section-title">{mod.name}</span>
-                <span className={`pm-badge ${mod.required ? 'pm-badge--req' : 'pm-badge--opt'}`}>
+                <span className="pm-section-title !text-base !font-bold">{mod.name}</span>
+                <span className={`pm-badge ${mod.required ? 'pm-badge--req' : 'pm-badge--opt'} !text-xs !font-bold`}>
                   {mod.required ? 'Obligatorio' : 'Opcional'}
                 </span>
               </div>
               {!mod.multiple
-                ? <span className="pm-section-hint">Seleccione mínimo 1 opción</span>
+                ? <span className="pm-section-hint !text-sm">Seleccione mínimo 1 opción</span>
                 : mod.max != null && (
-                    <span className="pm-section-hint">Seleccione hasta {mod.max} opciones</span>
+                    <span className="pm-section-hint !text-sm">Seleccione hasta {mod.max} opciones</span>
                   )
               }
 
@@ -327,13 +327,13 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
                   return (
                     <div key={opt.id} className="pm-opt-row">
                       <div className="pm-opt-info">
-                        <div className="pm-opt-name">
+                        <div className="pm-opt-name !text-base !font-medium">
                           {opt.name}
                         </div>
                         {isVariable ? (
-                          <div><span className="pm-price-varies">📐 varía</span></div>
+                          <div><span className="pm-price-varies !text-xs">📐 varía</span></div>
                         ) : resolvedPrice > 0 ? (
-                          <div className="pm-opt-price">
+                          <div className="pm-opt-price !text-sm">
                             +{fmt(resolvedPrice)}
                           </div>
                         ) : null}
@@ -368,9 +368,9 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
 
           {/* ── Item note ── */}
           <div className="pm-section pm-note-section">
-            <span className="pm-section-title">Nota para este producto</span>
+            <span className="pm-section-title !text-base !font-bold">Nota para este producto</span>
             <textarea
-              className="pm-note-input"
+              className="pm-note-input !text-base"
               rows={2}
               placeholder="Ej: sin tomate en la mitad, bien cocido..."
               value={note}
@@ -384,11 +384,11 @@ export default function ProductModal({ product, modifierGroups, onAdd, onClose, 
         <div className="pm-footer">
           <div className="pm-qty-ctrl">
             <button className="pm-qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))}>−</button>
-            <span className="pm-qty-val">{qty}</span>
+            <span className="pm-qty-val !text-lg !font-bold">{qty}</span>
             <button className="pm-qty-btn" onClick={() => setQty(q => q + 1)}>+</button>
           </div>
           <button 
-            className="pm-add-btn" 
+            className="pm-add-btn !text-lg !font-bold" 
             disabled={!isFormValid}
             onClick={handleAdd}
           >
