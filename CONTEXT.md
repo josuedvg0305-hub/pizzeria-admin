@@ -964,3 +964,9 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - **Drawer de Detalle**: Se refactorizó `DetailPanel.jsx` de un bloque estático en la cuadrícula a un Cajón Flotante (`fixed`, `z-50`) con Backdrop oscuro para evitar saltos en la interfaz.
 - **Impresión POS-80**: Se aplicaron modificadores de impresión (`print:static`, etc.) al Drawer para liberar el ticket y permitir que ocupe el ancho total del papel térmico sin recortarse a la izquierda.
 
+---
+
+## Sesión del 26 de Abril 2026 - Auditoría y Seguridad Arquitectónica
+
+- **Desacoplamiento del Historial (Fix Nivel 1)**: Se refactorizó HistorialPage.jsx para que haga fetch directo a Supabase con estado local, dejando de consumir/sobrescribir el OrdersContext global, protegiendo así la cola de pedidos en vivo del PDV en navegaciones SPA.
+- **Atomicidad de Correlativos (Fix Nivel 1)**: Se eliminó la generación insegura de números de pedido en el frontend (getNextNum). Se implementó una secuencia en PostgreSQL (order_num_seq) que asume la responsabilidad de generar el correlativo num automáticamente y sin colisiones. El frontend ahora confía en el retorno de la inserción.
