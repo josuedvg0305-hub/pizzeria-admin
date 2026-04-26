@@ -350,11 +350,14 @@ export function MenuProvider({ children }) {
   }, [])
 
   const addModGroup = useCallback(async (data) => {
-    const newId = generateId()
-    setModGroups(p => [...p, { id: newId, options: [], min: 0, max: null, ...data }])
-    
+    // Usamos estrictamente data.id (stableGroupId generado en el modal)
+    // para que el estado local y Supabase compartan el mismo ID que
+    // bulkUpdateModGroupAssignments usará al asignar el grupo a los productos.
+    const groupId = data.id
+    setModGroups(p => [...p, { options: [], min: 0, max: null, ...data, id: groupId }])
+
     await supabase.from('modifier_groups').insert({
-      id: newId,
+      id: groupId,
       name: data.name,
       required: data.required || false,
       multiple: data.multiple || false,
