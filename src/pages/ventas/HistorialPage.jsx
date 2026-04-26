@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useOrders } from '../../context/OrdersContext'
+import { supabase } from '../../lib/supabase'
 import SalesFilterDrawer, {
   INIT_SALES_FILTERS,
   countSalesFilters,
@@ -25,6 +26,19 @@ const TYPE_LABEL = {
   mesa:     'Mesa',
 }
 
+function mapOrderFromDB(o) {
+  return {
+    ...o,
+    client:        o.client_snapshot,
+    discountMode:  o.discount_mode,
+    discountVal:   o.discount_val,
+    paymentMethod: o.payment_method,
+    createdAt:     new Date(o.created_at),
+    closedAt:      o.closed_at   ? new Date(o.closed_at)   : null,
+    scheduledAt:   o.scheduled_at ? new Date(o.scheduled_at) : null,
+  }
+}
+
 function fmtDate(d) {
   if (!d) return '—'
   const date = d instanceof Date ? d : new Date(d)
@@ -35,7 +49,7 @@ function fmtDate(d) {
 }
 
 export default function HistorialPage() {
-  const { orders, updateOrder, fetchOrders } = useOrders()
+  const { updateOrder } = useOrders()
 
   const [quickFilter,   setQuickFilter]   = useState('today')
   const [dateFrom,      setDateFrom]      = useState('')
@@ -44,6 +58,28 @@ export default function HistorialPage() {
   const [showDrawer,    setShowDrawer]    = useState(false)
   const [originFilter,  setOriginFilter]  = useState('all')
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [historicalOrders, setHistoricalOrders] = useState([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
+  const fetchHistoricalData = async (start = null, end = null) => {
+    setLoadingHistory(true)
+    try {
+      let query = supabase.from('orders').select('*')
+      if (start) query = query.gte('created_at', start.toISOString())
+      if (end) query = query.lte('created_at', end.toISOString())
+      
+      query = query.order('created_at', { ascending: false })
+      
+      const { data, error } = await query
+      if (error) {
+        console.error('Error fetching historical orders:', error)
+      } else if (data) {
+        setHistoricalOrders(data.map(mapOrderFromDB))
+      }
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
 
   // Cuando cambia el filtro rápido, calculamos fechas y cargamos de Supabase
   useEffect(() => {
@@ -82,8 +118,8 @@ export default function HistorialPage() {
     setDateTo(fmtYMD(endD))
 
     // Disparamos fetch a Supabase usando startD y endD
-    fetchOrders(startD, endD)
-  }, [quickFilter, fetchOrders])
+    fetchHistoricalData(startD, endD)
+  }, [quickFilter])
 
   const handleCustomSearch = () => {
     if (!dateFrom || !dateTo) {
@@ -91,11 +127,22 @@ export default function HistorialPage() {
     }
     const start = new Date(dateFrom + 'T00:00:00')
     const end = new Date(dateTo + 'T23:59:59.999')
-    fetchOrders(start, end)
+    fetchHistoricalData(start, end)
+  }
+
+  const handleReload = () => {
+    if (dateFrom && dateTo) {
+      const start = new Date(dateFrom + 'T00:00:00')
+      const end = new Date(dateTo + 'T23:59:59.999')
+      fetchHistoricalData(start, end)
+    } else {
+      fetchHistoricalData()
+    }
   }
 
   const handleUpdateOrder = (id, changes) => {
     updateOrder(id, changes);
+    setHistoricalOrders(prev => prev.map(o => o.id === id ? { ...o, ...changes } : o));
     if (selectedOrder?.id === id) {
       setSelectedOrder(prev => ({ ...prev, ...changes }));
     }
@@ -105,7 +152,7 @@ export default function HistorialPage() {
 
   /* Apply all filters */
   const displayed = useMemo(() => {
-    let result = [...orders]
+    let result = [...historicalOrders]
 
     /* Date range */
     if (dateFrom) {
@@ -157,7 +204,7 @@ export default function HistorialPage() {
     })
 
     return result
-  }, [orders, dateFrom, dateTo, salesFilters, originFilter])
+  }, [historicalOrders, dateFrom, dateTo, salesFilters, originFilter])
 
   /* Summary — exclude deleted and cancelled */
   const summary = useMemo(() => {
@@ -328,7 +375,7 @@ export default function HistorialPage() {
         </div>
 
         <div className="hp-tt-right">
-          <button className="btn btn-ghost btn-icon" title="Recargar" onClick={() => fetchOrders()}>↻</button>
+          <button className="btn btn-ghost btn-icon" title="Recargar" onClick={handleReload} disabled={loadingHistory}>↻</button>
           
           {quickFilter === 'custom' && (
             <button className="btn btn-secondary" title="Buscar fechas personalizadas" onClick={handleCustomSearch}>Buscar</button>
@@ -385,7 +432,9 @@ export default function HistorialPage() {
           </div>
 
           <div className="hp-grid-body">
-            {displayed.length === 0 ? (
+            {loadingHistory ? (
+              <div className="hp-empty">Cargando historial...</div>
+            ) : displayed.length === 0 ? (
               <div className="hp-empty">Sin pedidos para los filtros aplicados</div>
             ) : (
               displayed.map(order => {
