@@ -953,4 +953,14 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - **Deuda Técnica Crítica (Layout)**: Persiste un problema de solapamiento visual en el módulo de Reportes. El contenido no respeta el espacio del Sidebar (posicionamiento `fixed`). Se intentaron soluciones de compensación con `padding-left` y `margin-left` sin éxito definitivo.
     - *Nota para futuras sesiones*: Es necesario revisar la estructura del contenedor Padre/Layout global para asegurar que el área de contenido principal sea empujada correctamente por el sidebar o migrar a una estructura de flexbox 100% robusta que evite el uso de `fixed` absoluto si no se maneja la compensación en el wrapper. No se recomienda seguir intentando parches de CSS local en el componente de Reportes hasta que el Layout base sea estable.
 
+---
+
+## Sesión del 25 de Abril 2026 - Refactorización UI/UX y Fixes Críticos
+
+- **Dashboard de Reportes**: Se reescribió la lógica de fechas para la gráfica (truncando a hora local) para evitar solapamientos de días y proyecciones futuras. Se cambió a comparativa estricta (Período Actual vs Anterior).
+- **Validación de Mitades (PDV)**: Se corrigió la función validadora en `ProductModal.jsx` para que sume las cantidades (`qty`) de las opciones seleccionadas, respetando los límites min/max.
+- **Persistencia de Pagos**: Se blindó la lógica de cierre de pedidos para evitar que el estado `paymentMethod` se sobrescribiera o borrara al pasar el pedido a 'Finalizado'.
+- **Escalado Tipográfico**: Se aplicó un "bump" general de tipografía (clases Tailwind inline en JSX) en el historial y PDV para mejorar la accesibilidad visual en operación rápida.
+- **Drawer de Detalle**: Se refactorizó `DetailPanel.jsx` de un bloque estático en la cuadrícula a un Cajón Flotante (`fixed`, `z-50`) con Backdrop oscuro para evitar saltos en la interfaz.
+- **Impresión POS-80**: Se aplicaron modificadores de impresión (`print:static`, etc.) al Drawer para liberar el ticket y permitir que ocupe el ancho total del papel térmico sin recortarse a la izquierda.
 
