@@ -508,7 +508,7 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={onClose} />
-      <aside className="detail-panel !fixed !top-0 !right-0 !h-screen !w-[450px] !bg-white !shadow-2xl !z-50 overflow-y-auto">
+      <aside className="detail-panel !fixed !top-0 !right-0 !h-screen !w-[450px] !bg-white !shadow-2xl !z-50 overflow-y-auto print:!static print:!w-full print:!h-auto print:!p-0 print:!m-0 print:!shadow-none print:!transform-none">
       {/* ── Header ── */}
       <div
         className="dp-header"
