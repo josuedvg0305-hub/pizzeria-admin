@@ -506,7 +506,9 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
   const canEditType = order.status === 'pend' || order.status === 'preparacion'
 
   return (
-    <aside className="detail-panel">
+    <>
+      <div className="fixed inset-0 bg-black/40 z-40 transition-opacity" onClick={onClose} />
+      <aside className="detail-panel !fixed !top-0 !right-0 !h-screen !w-[450px] !bg-white !shadow-2xl !z-50 overflow-y-auto">
       {/* ── Header ── */}
       <div
         className="dp-header"
@@ -1155,7 +1157,8 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
       {printMode && (
         <OrderPrintTemplate order={order} mode={printMode} />
       )}
-    </aside>
+      </aside>
+    </>
   )
 }
 

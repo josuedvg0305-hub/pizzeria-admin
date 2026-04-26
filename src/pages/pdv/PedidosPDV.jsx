@@ -307,21 +307,21 @@ export default function PedidosPDV() {
             onNewOrder={handleNewOrder}
           />
         </div>
-
-        {selectedOrder && (
-          <DetailPanel
-            order={selectedOrder}
-            onClose={() => setSelectedOrderId(null)}
-            onAction={handleOrderAction}
-            onDelete={handleDeleteOrder}
-            onUpdate={handleUpdateOrder}
-            onAddProducts={handleAddProducts}
-            onTypeChange={handleTypeChange}
-            categories={categories}
-            modifierGroups={modifierGroups}
-          />
-        )}
       </div>
+
+      {selectedOrder && (
+        <DetailPanel
+          order={selectedOrder}
+          onClose={() => setSelectedOrderId(null)}
+          onAction={handleOrderAction}
+          onDelete={handleDeleteOrder}
+          onUpdate={handleUpdateOrder}
+          onAddProducts={handleAddProducts}
+          onTypeChange={handleTypeChange}
+          categories={categories}
+          modifierGroups={modifierGroups}
+        />
+      )}
 
       {modal === 'type' && (
         <OrderTypeModal
