@@ -970,3 +970,12 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 
 - **Desacoplamiento del Historial (Fix Nivel 1)**: Se refactorizó HistorialPage.jsx para que haga fetch directo a Supabase con estado local, dejando de consumir/sobrescribir el OrdersContext global, protegiendo así la cola de pedidos en vivo del PDV en navegaciones SPA.
 - **Atomicidad de Correlativos (Fix Nivel 1)**: Se eliminó la generación insegura de números de pedido en el frontend (getNextNum). Se implementó una secuencia en PostgreSQL (order_num_seq) que asume la responsabilidad de generar el correlativo num automáticamente y sin colisiones. El frontend ahora confía en el retorno de la inserción.
+
+---
+
+## Sesión del 26 de Abril 2026 - Parte 2 (Seguridad y Arranque)
+
+- **Optimización de Arranque (Arranque Silencioso)**: Se reestructuró el árbol de componentes en `main.jsx`/`App.jsx` moviendo los proveedores de datos (`MenuProvider`, `OrdersProvider`, `ClientProvider`, `SettingsProvider`) **detrás** del guard de autenticación (`AuthProvider`). Esto elimina el derroche de red y los errores de Supabase al evitar fetches fantasma antes del login exitoso.
+- **Seguridad de Credenciales Críticas (Fix Nivel 1)**: Se eliminó la API Key de Google Maps hardcodeada en texto plano dentro de `index.html`. Se migró a un modelo de variables de entorno seguras (`VITE_GOOGLE_MAPS_API_KEY` en `.env` local) con inyección dinámica para proteger la cuota de facturación en Google Cloud.
+- **Despliegue en Cloudflare Pages**: Se configuraron exitosamente las variables de entorno de producción directamente en el panel de Cloudflare, garantizando la inyección segura de secretos durante el proceso de build (Redeploy).
+- **Fix de Build CSS**: Se corrigió el orden estricto de precedencia de `@import` en `index.css` para que Vite y PostCSS compilen correctamente, manteniendo a Tailwind CSS de forma explícita en la línea 1 como estándar arquitectónico.
