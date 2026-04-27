@@ -10,7 +10,7 @@ Lee este archivo completo antes de escribir cualquier código. Contiene el stack
 - **Tailwind CSS** — Estándar principal para todo el diseño de la interfaz.
 - **@dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities** — drag & drop en Menú y PDV
 - **DM Sans** — fuente vía `@import` en `index.css`
-- **Sin backend** — todo es estado local en React, sin localStorage (excepto el logo del sidebar)
+- **Supabase** — backend, base de datos PostgreSQL, autenticación, persistencia y realtime para módulos conectados.
 
 **Regla de Estilos:** El proyecto utiliza Tailwind CSS como estándar principal para todo el diseño de la interfaz. Todas las nuevas vistas, refactorizaciones y componentes DEBEN utilizar exclusivamente clases de utilidad de Tailwind (ej. flex, p-4, text-gray-800). NO se deben crear nuevos archivos .css separados a menos que sea para configuraciones globales del framework o animaciones extremadamente complejas que Tailwind no pueda manejar.
 
@@ -289,14 +289,16 @@ const ORDER_STATES = {
 }
 // Flujo: pend → preparacion → listo → finalizado
 // action 'advance' avanza un paso; 'cancel' → cancelado (con closedAt)
-// Cobrar desde PaymentModal también setea status: 'finalizado'
+// Cobrar desde PaymentModal solo marca paid/paymentMethod; NO cambia status.
+// Finalizar es una acción separada (action 'advance') disponible cuando status === 'listo'.
 ```
 
 Botón principal por estado:
 ```
 pend        → ▶ Aceptar   (verde)
 preparacion → 🍕 Listo    (azul)
-listo       → ✓ Finalizar (gris oscuro) + ⚡ Cobrar y finalizar (solo DetailPanel)
+listo       → ✓ Finalizar (gris oscuro) | ⚡ Cobrar (abre PaymentModal, marca paid; NO finaliza)
+// ⚠️ Nota documental: si la UI muestra "Cobrar y finalizar", el comportamiento real ya los desacopla.
 finalizado  → sin botón principal
 cancelado   → sin botones de acción
 ```
@@ -330,7 +332,7 @@ Filtro "En curso" en FilterBar cubre `preparacion` + `listo`.
 ```js
 {
   id:            string,           // crypto.randomUUID()
-  num:           number,           // correlativo desde 1001
+  num:           number | '---',   // asignado por secuencia PostgreSQL (nextval); la UI muestra '---' hasta recibir confirmación del INSERT
   type:          'flash' | 'local' | 'llevar' | 'delivery' | 'mesa',
   status:        'pend' | 'preparacion' | 'listo' | 'finalizado' | 'cancelado',
   paid:          bool,
@@ -364,7 +366,7 @@ Filtro "En curso" en FilterBar cubre `preparacion` + `listo`.
 
 Provee a la app:
 ```js
-{ orders, addOrder, updateOrder, deleteOrder, getNextNum }
+{ orders, addOrder, updateOrder, deleteOrder }
 ```
 
 El estado `orders` interactúa en tiempo real con Supabase. Las mutaciones de pedidos (crear, actualizar estado a "preparación", soft-delete, etc.) insertan en el backend localmente usando un modelo Optimista (para percepción instantánea), mientras que los WebSockets de Supabase disparan eventos `INSERT`, `UPDATE` o `DELETE` que sincronizan en milisegundos las ventanas de otros usuarios conectados (por ejemplo, notificando instantáneamente la nueva comanda a la pantalla de la Cocina).
@@ -533,6 +535,8 @@ Botón de acción: `{isEditing ? 'Guardar cambios' : 'Agregar'} · {fmt(total)}`
 
 ### DetailPanel — estructura de secciones
 
+> **Arquitectura actual:** `DetailPanel` es un **Cajón Flotante** (`position: fixed`, `z-index: 50`) con backdrop oscuro semitransparente. No ocupa espacio en el grid del layout — se superpone sobre el contenido. Usar `print:static` al imprimir para evitar recorte en tickets POS-80.
+
 1. **Header** — color dinámico según estado, badge, tipo con ✏️, timer, programación
 2. **Editor inline de tipo** (`dp-type-editor`) — entre header y body
 3. **Cliente** — nombre, teléfono, dirección
@@ -669,8 +673,9 @@ Todos los selectores son descendientes de `.order-print-template` — ninguno af
 Panel de visualización de órdenes en curso para la cocina. Cards grandes con timer, sin acciones complejas.
 
 ### Módulo 4 — Ventas (`/historial`)
-Grilla de alta densidad (CSS Grid, sin `<table>`) sobre `OrdersContext`. Drawer lateral `HistoryDetailDrawer` para ver detalles + gestión de pagos inline (menú popover ⋮ para anular/reasignar).
-**Exportación a Excel**: Botón que exporta el estado actual filtrado a CSV (BOM UTF-8, separador punto y coma). Incluye desglose financiero avanzado (subtotales de ítems, monto y tipo de descuento, propinas, empaque, delivery y totales netos/brutos) sin usar librerías externas (solo Vanilla JS `Blob`).
+**Estado** — Completado. `HistorialPage.jsx` implementada con grilla de alta densidad (CSS Grid, sin `<table>`). **Desacoplada de `OrdersContext`**: usa estado local propio (`historicalOrders`) con fetch directo a Supabase aplicando filtros de fecha, protegiendo la cola en vivo del PDV.
+Drawer lateral `HistoryDetailDrawer` para detalles + gestión de pagos inline.
+**Exportación a Excel**: Botón que exporta el estado filtrado a CSV (BOM UTF-8, punto y coma). Desglose financiero avanzado sin librerías externas (Vanilla JS `Blob`).
 
 ### Módulo 8 — Configuración de Delivery (`/settings`)
 **Estado** — Completado y conectado a Supabase (tabla `delivery_zones`).
@@ -702,7 +707,7 @@ Grilla de alta densidad (CSS Grid, sin `<table>`) sobre `OrdersContext`. Drawer 
 ```
 
 Provee: `{ deliveryZones, addZone, updateZone, deleteZone }`  
-Registrado en `main.jsx` como `<SettingsProvider>` envolviendo `<App>`. Realiza lecturas hacia la DB al montar y re-sincroniza (fetchZones) tras cada escritura, eliminando por completo la deuda técnica de depender de `localStorage`.
+Registrado en `App.jsx` dentro de `AuthenticatedApp`, solo se monta tras autenticación exitosa. Realiza lecturas hacia la DB al montar y re-sincroniza (fetchZones) tras cada escritura.
 
 #### Google Maps — integración nativa (sin librerías wrapper)
 
@@ -711,7 +716,7 @@ Registrado en `main.jsx` como `<SettingsProvider>` envolviendo `<App>`. Realiza 
 ```js
 // useGoogleMapsLoader — hook interno de DeliveryMap.jsx
 const script = document.createElement('script')
-script.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=drawing,places,geometry`
+script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=drawing,places,geometry`
 document.head.appendChild(script)
 ```
 
@@ -719,13 +724,13 @@ El hook devuelve `{ loaded, error }`. El mapa solo se inicializa cuando `loaded 
 
 - **Centro:** Buin, Chile `{ lat: -33.732, lng: -70.742 }`, zoom 14
 - **DrawingManager:** configurado exclusivamente para `OverlayType.POLYGON`
-- **API Key:** constante `API_KEY` en `DeliveryMap.jsx` — reemplazar `'INSERTAR_API_KEY_AQUI'` por la key real
+- **API Key:** leída de `import.meta.env.VITE_GOOGLE_MAPS_API_KEY` (variable de entorno Vite). Definir en `.env` local y en el panel de Cloudflare Pages para producción. Nunca hardcodear.
 
 #### Flujo de uso en Configuración
 
 1. Usuario dibuja polígono → `onZoneDrawn(coords, polygonInstance)` se llama
 2. Sidebar muestra formulario: nombre, precio, color  
-3. Al guardar → `addZone(...)` persiste en `localStorage` + actualiza estado
+3. Al guardar → `addZone(...)` persiste en Supabase (tabla `delivery_zones`) + actualiza estado
 4. El mapa re-renderiza el polígono como zona de solo lectura con `google.maps.Polygon`
 
 #### Integración de PDV + Delivery Calculator
@@ -750,7 +755,7 @@ El cálculo de envío se ejecuta en tiempo real durante la construcción del ped
 - No instalar librerías de UI (shadcn, MUI, Chakra, etc.)
 - No agregar react-router — la navegación es por estado
 - No usar `<table>` para listas de datos — usar CSS Grid con divs (aplica a pedidos, clientes e historial)
-- No guardar datos en localStorage excepto: (1) el logo del negocio y (2) las zonas de delivery (`pizzeria_delivery_zones`) — ambas excepciones arquitectónicas explícitas
+- No guardar datos en localStorage excepto: el logo del negocio — única excepción arquitectónica explícita. Las zonas de delivery ya están en Supabase.
 - No crear helpers o abstracciones para uso único
 - No agregar comentarios donde la lógica es obvia
 - No usar librerías de parseo CSV/Excel (papaparse, xlsx, etc.) — usar Vanilla JS: `FileReader` + manipulación de strings
@@ -849,15 +854,15 @@ return digits.startsWith('56') && digits.length > 9 ? digits.slice(2) : digits
 
 ## Base de Datos — Supabase (PostgreSQL)
 
-**Estado** — esquema DDL v1.0 generado. Pendiente: integración de clientes SDK en la app.
+**Estado** — Integración activa en producción. Todos los contextos migrados a Supabase.
 
 ### Motivación
 
-El sistema actualmente opera 100% en memoria (estado React). La migración a Supabase es incremental: primero se diseña el esquema fiel a los shapes actuales, luego se reemplazan los contextos uno a uno.
+El sistema opera con Supabase como backend principal. La migración incremental está completada: todos los contextos (Menu, Orders, Clients, Settings) interactúan con la base de datos en tiempo real.
 
 ### Archivo DDL
 
-El script SQL completo está en `supabase_ddl_v1.sql` (entregar al equipo para ejecutar en Supabase > SQL Editor > Run).
+El script SQL inicial está en `supabase_ddl_v1.sql` (esquema de referencia histórico; el esquema activo en producción puede tener variaciones posteriores como la secuencia `order_num_seq`).
 
 ### Tablas y correspondencia con contextos React
 
@@ -890,7 +895,7 @@ El script SQL completo está en `supabase_ddl_v1.sql` (entregar al equipo para e
          updated_at = NOW();
    ```
 
-4. **RLS abierto temporalmente** — todas las tablas tienen `ENABLE ROW LEVEL SECURITY` con policy `FOR ALL USING (true)`. Esto debe reemplazarse con políticas basadas en roles de Supabase Auth cuando se implemente el login de administrador.
+4. **RLS activo y restringido** — todas las tablas tienen `ENABLE ROW LEVEL SECURITY`. Las políticas fueron actualizadas de `USING (true)` a `TO authenticated`, cerrando el acceso a peticiones anónimas. El login de administrador está implementado vía Supabase Auth.
 
 5. **`deleted` en orders** — las órdenes nunca se eliminan físicamente (`DELETE`). Se usa soft-delete (`deleted = TRUE`) para mantener el historial de auditoría.
 
@@ -931,51 +936,4 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - El componente `App.jsx` actúa como guardia: si `user` es nulo, la pantalla se encierra explícitamente en el `<Login />` anulando el acceso al enrutador de vistas, el Sidebar y cualquier Contexto dependiente de la interfaz.
 - La pantalla nativa `<Login />` está construida respetando la estética actual del proyecto (`var(--surface)`, `var(--brand)`) y maneja el feedback visual de errores como credenciales incorrectas.
 
----
-
-## Sesión del 22 de Abril 2026 - Parte 2
-
-- **Refactorización del PDV** a diseño de pantalla completa anidado (3 columnas) bajo el header principal.
-- **Implementación de scroll independiente** (`overflow-y-auto`) para las columnas de Categorías, Productos y Ticket.
-- **Implementación de Scroll Continuo (Spy Scroll)** en la lista de productos y limpieza visual del sidebar (sin emojis ni contadores).
-- **Corrección del scroll en el módulo de Menú (Panel Admin)** para que ocupe todo el alto disponible y la barra quede al ras de la pantalla.
-- **Fix en el input del teléfono del cliente**: Regex `\D` implementado para limpiar espacios y caracteres especiales al pegar números desde WhatsApp, respetando el `maxLength`.
-
----
-
-## Sesión del 24 de Abril 2026 - Reportes y Analíticas
-
-- **Dashboard de Reportes V2**: Implementado con éxito en `Reports.jsx` (ReportesPage.jsx).
-    - Incluye cálculo de 3 KPIs principales: Cantidad de Pedidos, Ventas Totales y Ticket Promedio.
-    - Lógica de comparación porcentual (%) automática contra el período anterior equivalente.
-    - Integración de `recharts` con protecciones contra estados de carga y datos nulos (previniendo crashes de `viewBox`).
-    - Selector de rangos de fecha funcional (Hoy, Ayer, 7d, 30d, Mes, Año).
-- **Deuda Técnica Crítica (Layout)**: Persiste un problema de solapamiento visual en el módulo de Reportes. El contenido no respeta el espacio del Sidebar (posicionamiento `fixed`). Se intentaron soluciones de compensación con `padding-left` y `margin-left` sin éxito definitivo.
-    - *Nota para futuras sesiones*: Es necesario revisar la estructura del contenedor Padre/Layout global para asegurar que el área de contenido principal sea empujada correctamente por el sidebar o migrar a una estructura de flexbox 100% robusta que evite el uso de `fixed` absoluto si no se maneja la compensación en el wrapper. No se recomienda seguir intentando parches de CSS local en el componente de Reportes hasta que el Layout base sea estable.
-
----
-
-## Sesión del 25 de Abril 2026 - Refactorización UI/UX y Fixes Críticos
-
-- **Dashboard de Reportes**: Se reescribió la lógica de fechas para la gráfica (truncando a hora local) para evitar solapamientos de días y proyecciones futuras. Se cambió a comparativa estricta (Período Actual vs Anterior).
-- **Validación de Mitades (PDV)**: Se corrigió la función validadora en `ProductModal.jsx` para que sume las cantidades (`qty`) de las opciones seleccionadas, respetando los límites min/max.
-- **Persistencia de Pagos**: Se blindó la lógica de cierre de pedidos para evitar que el estado `paymentMethod` se sobrescribiera o borrara al pasar el pedido a 'Finalizado'.
-- **Escalado Tipográfico**: Se aplicó un "bump" general de tipografía (clases Tailwind inline en JSX) en el historial y PDV para mejorar la accesibilidad visual en operación rápida.
-- **Drawer de Detalle**: Se refactorizó `DetailPanel.jsx` de un bloque estático en la cuadrícula a un Cajón Flotante (`fixed`, `z-50`) con Backdrop oscuro para evitar saltos en la interfaz.
-- **Impresión POS-80**: Se aplicaron modificadores de impresión (`print:static`, etc.) al Drawer para liberar el ticket y permitir que ocupe el ancho total del papel térmico sin recortarse a la izquierda.
-
----
-
-## Sesión del 26 de Abril 2026 - Auditoría y Seguridad Arquitectónica
-
-- **Desacoplamiento del Historial (Fix Nivel 1)**: Se refactorizó HistorialPage.jsx para que haga fetch directo a Supabase con estado local, dejando de consumir/sobrescribir el OrdersContext global, protegiendo así la cola de pedidos en vivo del PDV en navegaciones SPA.
-- **Atomicidad de Correlativos (Fix Nivel 1)**: Se eliminó la generación insegura de números de pedido en el frontend (getNextNum). Se implementó una secuencia en PostgreSQL (order_num_seq) que asume la responsabilidad de generar el correlativo num automáticamente y sin colisiones. El frontend ahora confía en el retorno de la inserción.
-
----
-
-## Sesión del 26 de Abril 2026 - Parte 2 (Seguridad y Arranque)
-
-- **Optimización de Arranque (Arranque Silencioso)**: Se reestructuró el árbol de componentes en `main.jsx`/`App.jsx` moviendo los proveedores de datos (`MenuProvider`, `OrdersProvider`, `ClientProvider`, `SettingsProvider`) **detrás** del guard de autenticación (`AuthProvider`). Esto elimina el derroche de red y los errores de Supabase al evitar fetches fantasma antes del login exitoso.
-- **Seguridad de Credenciales Críticas (Fix Nivel 1)**: Se eliminó la API Key de Google Maps hardcodeada en texto plano dentro de `index.html`. Se migró a un modelo de variables de entorno seguras (`VITE_GOOGLE_MAPS_API_KEY` en `.env` local) con inyección dinámica para proteger la cuota de facturación en Google Cloud.
-- **Despliegue en Cloudflare Pages**: Se configuraron exitosamente las variables de entorno de producción directamente en el panel de Cloudflare, garantizando la inyección segura de secretos durante el proceso de build (Redeploy).
-- **Fix de Build CSS**: Se corrigió el orden estricto de precedencia de `@import` en `index.css` para que Vite y PostCSS compilen correctamente, manteniendo a Tailwind CSS de forma explícita en la línea 1 como estándar arquitectónico.
+> **Nota Histórica:** Para ver el registro de sesiones y refactorizaciones pasadas, consulta el archivo [HISTORY.md](./HISTORY.md).
