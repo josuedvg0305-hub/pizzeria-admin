@@ -49,14 +49,19 @@ src/
 ├── App.css
 ├── index.css                        ← variables globales + utilidades
 │
+├── lib/
+│   └── supabase.js                  ← cliente de conexión a Supabase
+│
 ├── data/
 │   ├── menuData.js                  ← seed data + generateId()
 │   └── clientsData.js               ← SEED_CLIENTS (array de clientes con addresses[])
 │
 ├── context/
+│   ├── AuthContext.jsx              ← estado global de sesión (raíz)
 │   ├── MenuContext.jsx              ← estado global del menú y logo
 │   ├── OrdersContext.jsx            ← estado global de órdenes
-│   └── ClientContext.jsx           ← estado global de clientes (única fuente de verdad)
+│   ├── ClientContext.jsx            ← estado global de clientes (única fuente de verdad)
+│   └── SettingsContext.jsx          ← estado de configuración global (zonas)
 │
 ├── components/
 │   ├── Layout/
@@ -79,32 +84,38 @@ src/
 │   │   ├── ModifiersPanel.jsx       ← grupos + GroupModal con tabs Opciones/Productos
 │   │   └── ModifiersPanel.css
 │   │
-│   └── pdv/
-│       ├── ChannelBar.jsx           ← tabs Mostrador / A domicilio / Mesas
-│       ├── ChannelBar.css
-│       ├── FilterBar.jsx            ← pills + botón ⚙ Filtros
-│       ├── FilterBar.css
-│       ├── FilterDrawer.jsx         ← drawer 320px filtros avanzados (exporta INIT_ADV_FILTERS)
-│       ├── FilterDrawer.css
-│       ├── OrderList.jsx            ← grid CSS (no table)
-│       ├── OrderList.css
-│       ├── OrderRow.jsx             ← fila con timer vivo (useTick 15s)
-│       ├── OrderRow.css
-│       ├── DetailPanel.jsx          ← panel lateral derecho, timer vivo
-│       ├── DetailPanel.css
-│       ├── OrderPrintTemplate.jsx   ← recibo para impresora térmica 80mm
-│       ├── OrderPrintTemplate.css   ← display:none en pantalla; @media print aísla el ticket
-│       └── modals/
-│           ├── OrderTypeModal.jsx   ← elegir tipo de pedido (5 opciones)
-│           ├── OrderTypeModal.css
-│           ├── OrderBuilderModal.jsx ← constructor 3 columnas (960×620px) con autocomplete de cliente
-│           ├── OrderBuilderModal.css
-│           ├── ProductModal.jsx     ← variantes + modificadores + qty (PDV)
-│           ├── ProductModal.css
-│           ├── PaymentModal.jsx     ← cobro con vuelto
-│           └── PaymentModal.css
+│   ├── pdv/
+│   │   ├── ChannelBar.jsx           ← tabs Mostrador / A domicilio / Mesas
+│   │   ├── ChannelBar.css
+│   │   ├── FilterBar.jsx            ← pills + botón ⚙ Filtros
+│   │   ├── FilterBar.css
+│   │   ├── FilterDrawer.jsx         ← drawer 320px filtros avanzados (exporta INIT_ADV_FILTERS)
+│   │   ├── FilterDrawer.css
+│   │   ├── OrderList.jsx            ← grid CSS (no table)
+│   │   ├── OrderList.css
+│   │   ├── OrderRow.jsx             ← fila con timer vivo (useTick 15s)
+│   │   ├── OrderRow.css
+│   │   ├── DetailPanel.jsx          ← panel lateral derecho, timer vivo
+│   │   ├── DetailPanel.css
+│   │   ├── OrderPrintTemplate.jsx   ← recibo para impresora térmica 80mm
+│   │   ├── OrderPrintTemplate.css   ← display:none en pantalla; @media print aísla el ticket
+│   │   └── modals/
+│   │       ├── OrderTypeModal.jsx   ← elegir tipo de pedido (5 opciones)
+│   │       ├── OrderTypeModal.css
+│   │       ├── OrderBuilderModal.jsx ← constructor 3 columnas (960×620px) con autocomplete de cliente
+│   │       ├── OrderBuilderModal.css
+│   │       ├── ProductModal.jsx     ← variantes + modificadores + qty (PDV)
+│   │       ├── ProductModal.css
+│   │       ├── PaymentModal.jsx     ← cobro con vuelto
+│   │       └── PaymentModal.css
+│   │
+│   └── settings/
+│       ├── DeliveryMap.jsx          ← mapa interactivo con Google Maps
+│       └── DeliveryMap.css
 │
 └── pages/
+    ├── Login.jsx                    ← pantalla de autenticación nativa
+    ├── Login.css
     ├── pdv/
     │   ├── PedidosPDV.jsx           ← página principal PDV, toda la lógica
     │   └── PedidosPDV.css
@@ -112,16 +123,20 @@ src/
     │   ├── HistorialPage.jsx        ← grilla alta densidad + drawer lateral de detalle
     │   ├── HistorialPage.css
     │   ├── HistoryDetailDrawer.jsx  ← panel lateral de detalles + gestión de pagos
-    │   └── HistoryDetailDrawer.css
-    └── clientes/
-        ├── ClientsPage.jsx          ← grilla CSS + sorting + filtros
-        ├── ClientsPage.css
-        ├── ClientSearchModal.jsx    ← búsqueda dual nombre/teléfono
-        ├── ClientSearchModal.css
-        ├── ClientFilterModal.jsx    ← filtros avanzados (drawer lateral)
-        ├── ClientFilterModal.css
-        ├── ClientDrawer.jsx         ← CRUD inline de clientes con addresses[]
-        └── ClientDrawer.css
+    │   ├── HistoryDetailDrawer.css
+    │   └── ReportesPage.jsx         ← dashboard analítico (KPIs, Recharts)
+    ├── clientes/
+    │   ├── ClientsPage.jsx          ← grilla CSS + sorting + filtros
+    │   ├── ClientsPage.css
+    │   ├── ClientSearchModal.jsx    ← búsqueda dual nombre/teléfono
+    │   ├── ClientSearchModal.css
+    │   ├── ClientFilterModal.jsx    ← filtros avanzados (drawer lateral)
+    │   ├── ClientFilterModal.css
+    │   ├── ClientDrawer.jsx         ← CRUD inline de clientes con addresses[]
+    │   └── ClientDrawer.css
+    └── settings/
+        ├── SettingsPage.jsx         ← gestión de zonas de delivery
+        └── SettingsPage.css
 ```
 
 ---
@@ -332,7 +347,7 @@ Filtro "En curso" en FilterBar cubre `preparacion` + `listo`.
 ```js
 {
   id:            string,           // crypto.randomUUID()
-  num:           number | '---',   // asignado por secuencia PostgreSQL (nextval); la UI muestra '---' hasta recibir confirmación del INSERT
+  num:           number,           // asignado por PostgreSQL mediante secuencia; la UI puede mostrar '---' mientras espera confirmación
   type:          'flash' | 'local' | 'llevar' | 'delivery' | 'mesa',
   status:        'pend' | 'preparacion' | 'listo' | 'finalizado' | 'cancelado',
   paid:          bool,
@@ -667,7 +682,7 @@ Todos los selectores son descendientes de `.order-print-template` — ninguno af
 
 ---
 
-## Módulos por construir
+## Módulos adicionales y estado actual
 
 ### Módulo 3 — Cocina (`/kitchen`)
 Panel de visualización de órdenes en curso para la cocina. Cards grandes con timer, sin acciones complejas.
@@ -684,7 +699,7 @@ Drawer lateral `HistoryDetailDrawer` para detalles + gestión de pagos inline.
 
 | Archivo | Propósito |
 |---|---|
-| `src/context/SettingsContext.jsx` | Contexto de configuración global interactuando en tiempo real con Supabase. |
+| `src/context/SettingsContext.jsx` | Contexto de configuración global sincronizado con Supabase mediante refetch tras cada escritura. |
 | `src/components/settings/DeliveryMap.jsx` | Componente de mapa Google Maps inyectado nativamente. DrawingManager para polígonos. |
 | `src/components/settings/DeliveryMap.css` | Prefijo `dmap-`. |
 | `src/pages/settings/SettingsPage.jsx` | Página principal. Layout 2 columnas: mapa + sidebar de zonas. |
@@ -777,7 +792,7 @@ Provee a toda la app:
 { clients, fetchClients, registerClientFromOrder, saveClient, importBulkClients }
 ```
 
-Inicializado en `main.jsx` como `<ClientProvider>` envolviendo `<App>`. Descarga los clientes interactuando con la nube mediante un `useEffect` (`fetchClients`) y mantiene los campos `loyaltyPoints` y `totalOrders` en camelCase para las vistas de la app.
+Inicializado en `App.jsx` dentro de `AuthenticatedApp`, solo se monta tras autenticación exitosa. Descarga los clientes interactuando con la nube mediante un `useEffect` (`fetchClients`) y mantiene los campos `loyaltyPoints` y `totalOrders` en camelCase para las vistas de la app.
 
 **Shape de cliente:**
 ```js
