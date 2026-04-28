@@ -50,3 +50,11 @@ Este archivo conserva el registro histórico de sesiones, refactorizaciones y de
 - **Seguridad de Credenciales Críticas (Fix Nivel 1)**: Se eliminó la API Key de Google Maps hardcodeada en texto plano dentro de `index.html`. Se migró a un modelo de variables de entorno seguras (`VITE_GOOGLE_MAPS_API_KEY` en `.env` local) con inyección dinámica para proteger la cuota de facturación en Google Cloud.
 - **Despliegue en Cloudflare Pages**: Se configuraron exitosamente las variables de entorno de producción directamente en el panel de Cloudflare, garantizando la inyección segura de secretos durante el proceso de build (Redeploy).
 - **Fix de Build CSS**: Se corrigió el orden estricto de precedencia de `@import` en `index.css` para que Vite y PostCSS compilen correctamente, manteniendo a Tailwind CSS de forma explícita en la línea 1 como estándar arquitectónico.
+
+---
+
+## Sesión del 27 de Abril 2026 - Parte 3 (Arquitectura de Enrutamiento)
+
+- **Migración a React Router**: Se derogó la regla de navegación por estado (`activePage`) y se implementó `react-router-dom` v6 de forma oficial.
+- **Code Splitting y Optimización**: Se aplicó `React.lazy` y `<Suspense>` para diferir la carga de módulos pesados. Esto optimiza radicalmente la carga inicial aislando el peso de `recharts` (Reportes) y SDKs externos (Configuración/Mapas) del bundle de la vista principal del PDV.
+- **Nuevos Módulos (WIP)**: Se creó un placeholder temporal para el módulo de Cocina (`/cocina`) inyectado en el sistema de enrutamiento con el mismo patrón arquitectónico de Lazy Loading.

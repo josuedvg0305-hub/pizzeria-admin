@@ -6,7 +6,7 @@ Lee este archivo completo antes de escribir cualquier código. Contiene el stack
 
 ## Stack y configuración base
 
-- **React 19 + Vite 8** — sin router (navegación por estado `activePage` en App.jsx)
+- **React 19 + Vite 8** — con react-router-dom v6 (navegación por URL y Code Splitting)
 - **Tailwind CSS** — Estándar principal para todo el diseño de la interfaz.
 - **@dnd-kit/core + @dnd-kit/sortable + @dnd-kit/utilities** — drag & drop en Menú y PDV
 - **DM Sans** — fuente vía `@import` en `index.css`
@@ -45,7 +45,7 @@ Clases utilitarias compartidas en `index.css`: `.btn`, `.btn-primary`, `.btn-blu
 ```
 src/
 ├── main.jsx
-├── App.jsx                          ← navegación por estado, sin router
+├── App.jsx                          ← enrutamiento principal (BrowserRouter, Routes, Lazy)
 ├── App.css
 ├── index.css                        ← variables globales + utilidades
 │
@@ -134,9 +134,11 @@ src/
     │   ├── ClientFilterModal.css
     │   ├── ClientDrawer.jsx         ← CRUD inline de clientes con addresses[]
     │   └── ClientDrawer.css
-    └── settings/
-        ├── SettingsPage.jsx         ← gestión de zonas de delivery
-        └── SettingsPage.css
+    ├── settings/
+    │   ├── SettingsPage.jsx         ← gestión de zonas de delivery
+    │   └── SettingsPage.css
+    └── cocina/
+        └── CocinaPage.jsx           ← placeholder temporal del módulo de cocina
 ```
 
 ---
