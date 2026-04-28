@@ -951,4 +951,49 @@ Todo el panel administrativo está fuertemente protegido (route guard) mediante 
 - El componente `App.jsx` actúa como guardia: si `user` es nulo, la pantalla se encierra explícitamente en el `<Login />` anulando el acceso al enrutador de vistas, el Sidebar y cualquier Contexto dependiente de la interfaz.
 - La pantalla nativa `<Login />` está construida respetando la estética actual del proyecto (`var(--surface)`, `var(--brand)`) y maneja el feedback visual de errores como credenciales incorrectas.
 
+---
+
+## Registro de Sesión — 27 de Abril 2026: Corrección Crítica de Delivery
+
+### Fix 1 — Inyección Dinámica de Google Maps en `OrderBuilderModal.jsx`
+
+**Problema:** El cálculo automático del costo de delivery fallaba silenciosamente en el PDV. La API `google.maps.Geocoder` y `geometry.poly.containsLocation` no estaban disponibles al abrir `OrderBuilderModal` porque el script de Google Maps solo se inyectaba al montar `DeliveryMap.jsx`, componente exclusivo de la página de Configuración. Si el usuario nunca navegaba a Configuración en esa sesión, el objeto global `window.google` era `undefined`.
+
+**Solución:** Se replicó el mismo patrón de carga dinámica (`useGoogleMapsLoader`) directamente dentro de `OrderBuilderModal.jsx`. El hook comprueba si `window.google` ya existe (evitando doble inyección) y solo habilita el cálculo de delivery una vez que `loaded === true`. Esto hace que el PDV sea autosuficiente respecto a la disponibilidad de la API de mapas.
+
+```js
+// OrderBuilderModal.jsx — hook de carga independiente del mapa
+useEffect(() => {
+  if (window.google) { setMapsLoaded(true); return; }
+  const script = document.createElement('script');
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=drawing,places,geometry`;
+  script.onload = () => setMapsLoaded(true);
+  document.head.appendChild(script);
+}, []);
+```
+
+**Efecto:** El delivery se calcula en tiempo real desde el PDV sin depender del estado de navegación previo del usuario.
+
+---
+
+### Fix 2 — Persistencia JSONB de `charges` en `DetailPanel.jsx`
+
+**Problema:** Al ingresar un cargo manual de delivery desde `DetailPanel` (sección "Cargos adicionales"), la función `updateCharge` construía un objeto `charges` nuevo usando solo el valor que el usuario acababa de tipear, ignorando el estado real del campo `charges` almacenado en Supabase. Al persistir este objeto parcial:
+
+1. Supabase recibía un JSONB incompleto (sin `tipMode`, `tipVal`, `servicio`, `empaque`, etc.).
+2. En una recarga (F5) el estado se restauraba desde la DB, perdiendo los valores anteriores de los otros cargos o, en el peor caso, la fila era rechazada si el esquema esperaba el objeto completo.
+
+**Solución:** La función `updateCharge` ahora **fusiona** explícitamente el cambio con el objeto `charges` completo que ya existe en la orden, usando spread operator:
+
+```js
+// DetailPanel.jsx — updateCharge corregido
+const updateCharge = (field, value) => {
+  const currentCharges = order.charges ?? {};          // estado real desde Supabase
+  const merged = { ...currentCharges, [field]: value }; // fusión segura
+  onUpdate(order.id, { charges: merged });
+};
+```
+
+**Efecto:** Cada escritura hacia Supabase siempre envía el objeto `charges` completo y válido. Los cambios sobreviven recargas de página y no borran otros cargos simultáneos (propina, servicio, empaque).
+
 > **Nota Histórica:** Para ver el registro de sesiones y refactorizaciones pasadas, consulta el archivo [HISTORY.md](./HISTORY.md).
