@@ -4,6 +4,7 @@ import OrderPrintTemplate from './OrderPrintTemplate'
 import { useClients } from '../../context/ClientContext'
 import { useSettings } from '../../context/SettingsContext'
 import { calculateDeliveryPrice } from '../../utils/deliveryCalculator'
+import { computeAmounts } from '../../utils/orderMath'
 import './DetailPanel.css'
 
 /* ── Helpers ── */
@@ -56,22 +57,7 @@ const PAYMENT_METHODS = [
   { id: 'Transferencia', label: 'Transferencia', icon: '📱' },
 ]
 
-/* ── Amount computation ── */
-function computeAmounts(items, charges, discountMode, discountVal) {
-  const subtotal = items.reduce((s, i) => s + i.total, 0)
-  const discountAmt = discountMode === '%'
-    ? Math.round(subtotal * (Number(discountVal) || 0) / 100)
-    : (Number(discountVal) || 0)
-  const subtotalNet = Math.max(0, subtotal - discountAmt)
-  const tipAmt = charges.tipMode === '%'
-    ? Math.round(subtotalNet * (Number(charges.tipVal) || 0) / 100)
-    : (Number(charges.tipVal) || 0)
-  const deliveryAmt = Number(charges.delivery) || 0
-  const servicioAmt = Number(charges.servicio) || 0
-  const empaqueAmt = Number(charges.empaque) || 0
-  const total = subtotalNet + deliveryAmt + tipAmt + servicioAmt + empaqueAmt
-  return { subtotal, discountAmt, subtotalNet, tipAmt, deliveryAmt, servicioAmt, empaqueAmt, total }
-}
+
 
 /* ── Scheduled label ── */
 function fmtSchedLabel(scheduledAt) {

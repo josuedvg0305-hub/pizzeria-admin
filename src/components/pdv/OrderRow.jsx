@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { computeOrderTotal } from '../../utils/orderMath'
 import './OrderRow.css'
 
 const fmt = (n) => `$${Number(n).toLocaleString('es-CL')}`
@@ -66,6 +67,8 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
   const tc    = TYPE_CONFIG[order.type]    ?? { icon: '📋', label: order.type }
   const state = ORDER_STATES[order.status] ?? ORDER_STATES.pend
 
+  const grandTotal = useMemo(() => computeOrderTotal(order), [order])
+
   const isDone = order.status === 'finalizado' || order.status === 'cancelado'
 
   /* ── Time display ── */
@@ -124,7 +127,7 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
 
       {/* ── TOTAL ── */}
       <div className="or-cell">
-        <span className="or-total !text-xl !font-bold">{fmt(order.total)}</span>
+        <span className="or-total !text-xl !font-bold">{fmt(grandTotal)}</span>
       </div>
 
       {/* ── CLIENTE ── */}
