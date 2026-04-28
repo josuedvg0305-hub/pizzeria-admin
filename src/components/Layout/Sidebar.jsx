@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useMenu } from '../../context/MenuContext'
 import './Sidebar.css'
 
@@ -6,44 +7,44 @@ const NAV_SECTIONS = [
   {
     label: 'OPERACIONES',
     items: [
-      { id: 'pdv',     Icon: IconPDV,     label: 'Pedidos PDV' },
+      { id: 'pdv',     path: '/pdv',             Icon: IconPDV,     label: 'Pedidos PDV' },
       {
         id: 'ventas',
+        path: '/ventas',
         Icon: IconVentas,
         label: 'Ventas',
         collapsible: true,
         children: [
-          { id: 'historial', label: 'Historial de pedidos' },
-          { id: 'reportes',  label: 'Reportes' },
+          { id: 'historial', path: '/ventas/historial', label: 'Historial de pedidos' },
+          { id: 'reportes',  path: '/ventas/reportes',  label: 'Reportes' },
         ],
       },
-      { id: 'menu',    Icon: IconMenu,    label: 'Menú'    },
-      { id: 'kitchen', Icon: IconKitchen, label: 'Cocina'  },
+      { id: 'menu',    path: '/menu',            Icon: IconMenu,    label: 'Menú'    },
+      { id: 'kitchen', path: '/cocina',          Icon: IconKitchen, label: 'Cocina'  },
     ],
   },
   {
     label: 'GESTIÓN',
     items: [
-      { id: 'clients',  Icon: IconClients,  label: 'Clientes'       },
-      { id: 'settings', Icon: IconSettings, label: 'Configuraciones' },
+      { id: 'clients',  path: '/clientes',       Icon: IconClients,  label: 'Clientes'       },
+      { id: 'settings', path: '/configuracion',  Icon: IconSettings, label: 'Configuraciones' },
     ],
   },
 ]
 
 const FOOTER_ITEMS = [
-  { id: 'preview', Icon: IconEye, label: 'Vista previa' },
-  { id: 'qr',      Icon: IconQR,  label: 'QR y enlaces' },
+  { id: 'preview', path: '/preview', Icon: IconEye, label: 'Vista previa' },
+  { id: 'qr',      path: '/qr',      Icon: IconQR,  label: 'QR y enlaces' },
 ]
 
-/* IDs that belong to the Ventas group */
-const VENTAS_IDS = new Set(['ventas', 'historial', 'reportes'])
-
-export default function Sidebar({ activePage, onNavigate, isOpen }) {
+export default function Sidebar({ isOpen, onMobileClose }) {
   const { logo, setLogo } = useMenu()
   const inputRef = useRef(null)
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  /* Start open if any ventas sub-item is active */
-  const [ventasOpen, setVentasOpen] = useState(() => VENTAS_IDS.has(activePage))
+  const isVentasActive = location.pathname.startsWith('/ventas')
+  const [ventasOpen, setVentasOpen] = useState(() => isVentasActive)
 
   const handleLogoChange = (e) => {
     const file = e.target.files[0]
@@ -54,11 +55,10 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
     e.target.value = ''
   }
 
-  const handleNavigate = (id) => {
-    onNavigate(id)
+  const handleNavigate = (path) => {
+    navigate(path)
+    if (onMobileClose) onMobileClose()
   }
-
-  const isVentasActive = VENTAS_IDS.has(activePage)
 
   return (
     <aside className={`sidebar ${isOpen ? 'is-open' : ''}`}>
@@ -88,7 +88,7 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
         {NAV_SECTIONS.map(section => (
           <div key={section.label} className="sidebar-section">
             <span className="sidebar-section-label">{section.label}</span>
-            {section.items.map(({ id, Icon, label, collapsible, children }) => {
+            {section.items.map(({ id, Icon, label, collapsible, children, path }) => {
               if (collapsible) {
                 return (
                   <div key={id} className="sidebar-collapsible">
@@ -99,7 +99,7 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
                         setVentasOpen(v => !v)
                         /* Navigate to first child if none already selected */
                         if (!isVentasActive && children?.length > 0) {
-                          handleNavigate(children[0].id)
+                          handleNavigate(children[0].path)
                         }
                       }}
                     >
@@ -116,8 +116,8 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
                         {children.map(child => (
                           <button
                             key={child.id}
-                            className={`sidebar-child-item${activePage === child.id ? ' active' : ''}`}
-                            onClick={() => handleNavigate(child.id)}
+                            className={`sidebar-child-item${location.pathname === child.path ? ' active' : ''}`}
+                            onClick={() => handleNavigate(child.path)}
                           >
                             <span className="sidebar-child-dot" />
                             {child.label}
@@ -132,8 +132,8 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
               return (
                 <button
                   key={id}
-                  className={`sidebar-item ${activePage === id ? 'active' : ''}`}
-                  onClick={() => handleNavigate(id)}
+                  className={`sidebar-item ${location.pathname === path ? 'active' : ''}`}
+                  onClick={() => handleNavigate(path)}
                 >
                   <Icon className="sidebar-item-icon" />
                   <span>{label}</span>
@@ -145,11 +145,11 @@ export default function Sidebar({ activePage, onNavigate, isOpen }) {
       </nav>
 
       <div className="sidebar-bottom">
-        {FOOTER_ITEMS.map(({ id, Icon, label }) => (
+        {FOOTER_ITEMS.map(({ id, Icon, label, path }) => (
           <button
             key={id}
-            className={`sidebar-item sidebar-item--sm ${activePage === id ? 'active' : ''}`}
-            onClick={() => handleNavigate(id)}
+            className={`sidebar-item sidebar-item--sm ${location.pathname === path ? 'active' : ''}`}
+            onClick={() => handleNavigate(path)}
           >
             <Icon className="sidebar-item-icon" />
             <span>{label}</span>

@@ -768,7 +768,7 @@ El cálculo de envío se ejecuta en tiempo real durante la construcción del ped
 
 - No crear nuevos archivos `.css` separados (usar Tailwind)
 - No instalar librerías de UI (shadcn, MUI, Chakra, etc.)
-- No agregar react-router — la navegación es por estado
+- Sí usar react-router-dom v6 con React.lazy() y Suspense para aislar la carga de los componentes pesados
 - No usar `<table>` para listas de datos — usar CSS Grid con divs (aplica a pedidos, clientes e historial)
 - No guardar datos en localStorage excepto: el logo del negocio — única excepción arquitectónica explícita. Las zonas de delivery ya están en Supabase.
 - No crear helpers o abstracciones para uso único

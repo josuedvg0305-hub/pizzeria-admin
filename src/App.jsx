@@ -1,53 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, Suspense, lazy } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { MenuProvider }     from './context/MenuContext'
 import { OrdersProvider }   from './context/OrdersContext'
 import { ClientProvider }   from './context/ClientContext'
 import { SettingsProvider } from './context/SettingsContext'
 import Sidebar from './components/Layout/Sidebar'
-import MenuPage from './components/Menu/MenuPage'
-import PedidosPDV from './pages/pdv/PedidosPDV'
-import HistorialPage from './pages/ventas/HistorialPage'
-import ReportesPage from './pages/ventas/ReportesPage'
-import ClientsPage from './pages/clientes/ClientsPage'
-import SettingsPage from './pages/settings/SettingsPage'
 import Login from './pages/Login'
 import './App.css'
 
-const PAGES = {
-  menu:      MenuPage,
-  pdv:       PedidosPDV,
-  historial: HistorialPage,
-  reportes:  ReportesPage,
-  clients:   ClientsPage,
-  settings:  SettingsPage,
-}
+const MenuPage      = lazy(() => import('./components/Menu/MenuPage'))
+const PedidosPDV    = lazy(() => import('./pages/pdv/PedidosPDV'))
+const HistorialPage = lazy(() => import('./pages/ventas/HistorialPage'))
+const ReportesPage  = lazy(() => import('./pages/ventas/ReportesPage'))
+const ClientsPage   = lazy(() => import('./pages/clientes/ClientsPage'))
+const SettingsPage  = lazy(() => import('./pages/settings/SettingsPage'))
+const CocinaPage    = lazy(() => import('./pages/cocina/CocinaPage'))
 
 /* ── Panel autenticado — los providers solo montan aquí ── */
 function AuthenticatedApp() {
-  const [activePage, setActivePage] = useState(() => {
-    const path = window.location.pathname.replace('/', '')
-    return PAGES[path] ? path : 'menu'
-  })
-
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname.replace('/', '')
-      if (PAGES[path]) setActivePage(path)
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
-
-  const PageComponent = PAGES[activePage] ?? MenuPage
-
-  const handleNavigate = (page) => {
-    setActivePage(page)
-    window.history.pushState(null, '', `/${page}`)
-    setIsMobileMenuOpen(false)
-  }
 
   return (
     // El orden de anidación es: Settings (zonas de delivery) → Menu → Orders → Clients
@@ -57,36 +29,49 @@ function AuthenticatedApp() {
       <MenuProvider>
         <OrdersProvider>
           <ClientProvider>
-            <div className="app-layout">
-              <Sidebar
-                activePage={activePage}
-                onNavigate={handleNavigate}
-                isOpen={isMobileMenuOpen}
-              />
-
-              {isMobileMenuOpen && (
-                <div
-                  className="sidebar-overlay"
-                  onClick={() => setIsMobileMenuOpen(false)}
+            <BrowserRouter>
+              <div className="app-layout">
+                <Sidebar
+                  isOpen={isMobileMenuOpen}
+                  onMobileClose={() => setIsMobileMenuOpen(false)}
                 />
-              )}
 
-              <div className="app-content-wrapper">
-                <header className="mobile-header">
-                  <span className="mobile-header-title">Admin Pizzería</span>
-                  <button
-                    className="mobile-header-btn"
-                    onClick={() => setIsMobileMenuOpen(true)}
-                  >
-                    ☰
-                  </button>
-                </header>
+                {isMobileMenuOpen && (
+                  <div
+                    className="sidebar-overlay"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  />
+                )}
 
-                <main className="app-main">
-                  <PageComponent />
-                </main>
+                <div className="app-content-wrapper">
+                  <header className="mobile-header">
+                    <span className="mobile-header-title">Admin Pizzería</span>
+                    <button
+                      className="mobile-header-btn"
+                      onClick={() => setIsMobileMenuOpen(true)}
+                    >
+                      ☰
+                    </button>
+                  </header>
+
+                  <main className="app-main">
+                    <Suspense fallback={<div className="flex h-full items-center justify-center text-[var(--muted)]">Cargando módulo...</div>}>
+                      <Routes>
+                        <Route path="/" element={<Navigate to="/pdv" replace />} />
+                        <Route path="/pdv" element={<PedidosPDV />} />
+                        <Route path="/ventas/historial" element={<HistorialPage />} />
+                        <Route path="/ventas/reportes" element={<ReportesPage />} />
+                        <Route path="/clientes" element={<ClientsPage />} />
+                        <Route path="/configuracion" element={<SettingsPage />} />
+                        <Route path="/menu" element={<MenuPage />} />
+                        <Route path="/cocina" element={<CocinaPage />} />
+                        <Route path="*" element={<Navigate to="/pdv" replace />} />
+                      </Routes>
+                    </Suspense>
+                  </main>
+                </div>
               </div>
-            </div>
+            </BrowserRouter>
           </ClientProvider>
         </OrdersProvider>
       </MenuProvider>
