@@ -33,7 +33,7 @@ export default function PedidosPDV() {
   const { registerClientFromOrder } = useClients()
 
   const [selectedOrderId, setSelectedOrderId] = useState(null)
-  const [activeChannel,   setActiveChannel]   = useState('mostrador')
+  const [activeChannel,   setActiveChannel]   = useState('todos')
   const [activeFilter,    setActiveFilter]    = useState('all')
   const [advFilters,      setAdvFilters]      = useState(INIT_ADV_FILTERS)
 
@@ -60,7 +60,7 @@ export default function PedidosPDV() {
 
   /* ── Derived ── */
   const channelOrders = useMemo(
-    () => activeOrders.filter(o => CHANNEL_TYPES[activeChannel]?.includes(o.type)),
+    () => activeOrders.filter(o => activeChannel === 'todos' || CHANNEL_TYPES[activeChannel]?.includes(o.type)),
     [activeOrders, activeChannel]
   )
 
@@ -95,11 +95,15 @@ export default function PedidosPDV() {
     return result
   }, [channelOrders, activeFilter, advFilters])
 
-  const channelCounts = useMemo(() => ({
-    mostrador: activeOrders.filter(o => CHANNEL_TYPES.mostrador.includes(o.type) && o.status !== 'finalizado' && o.status !== 'cancelado').length,
-    domicilio: activeOrders.filter(o => CHANNEL_TYPES.domicilio.includes(o.type) && o.status !== 'finalizado' && o.status !== 'cancelado').length,
-    mesas:     activeOrders.filter(o => CHANNEL_TYPES.mesas.includes(o.type) && o.status !== 'finalizado' && o.status !== 'cancelado').length,
-  }), [activeOrders])
+  const channelCounts = useMemo(() => {
+    const valid = activeOrders.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado')
+    return {
+      todos:     valid.length,
+      mostrador: valid.filter(o => CHANNEL_TYPES.mostrador.includes(o.type)).length,
+      domicilio: valid.filter(o => CHANNEL_TYPES.domicilio.includes(o.type)).length,
+      mesas:     valid.filter(o => CHANNEL_TYPES.mesas.includes(o.type)).length,
+    }
+  }, [activeOrders])
 
   const filterCounts = useMemo(() => ({
     all:    channelOrders.length,
@@ -172,7 +176,7 @@ export default function PedidosPDV() {
     setActiveChannel(ch)
     setActiveFilter('all')
     const stillVisible = activeOrders
-      .filter(o => CHANNEL_TYPES[ch]?.includes(o.type))
+      .filter(o => ch === 'todos' || CHANNEL_TYPES[ch]?.includes(o.type))
       .some(o => o.id === selectedOrderId)
     if (!stillVisible) setSelectedOrderId(null)
   }
