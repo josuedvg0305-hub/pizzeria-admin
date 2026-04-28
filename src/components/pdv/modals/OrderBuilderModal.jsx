@@ -8,11 +8,11 @@ import './OrderBuilderModal.css'
 const fmt = (n) => `$${Number(n).toLocaleString('es-CL')}`
 
 const TYPE_LABEL = {
-  flash:    'Pedido Flash',
-  local:    'En el local',
-  llevar:   'Para llevar',
+  flash: 'Pedido Flash',
+  local: 'En el local',
+  llevar: 'Para llevar',
   delivery: 'Delivery',
-  mesa:     'Mesa',
+  mesa: 'Mesa',
 }
 
 const FALLBACK_EMOJI = {
@@ -24,11 +24,11 @@ const FALLBACK_EMOJI = {
 }
 
 const CAT_EMOJI = {
-  'Entradas':          '🥗',
-  'Pizzas Clásicas':   '🍕',
+  'Entradas': '🥗',
+  'Pizzas Clásicas': '🍕',
   'Pizzas Especiales': '⭐',
-  'Bebidas':           '🥤',
-  'Promos':            '🎁',
+  'Bebidas': '🥤',
+  'Promos': '🎁',
 }
 
 const cleanEmoji = (str) => {
@@ -48,35 +48,46 @@ export default function OrderBuilderModal({
   const { clients } = useClients()
   const { deliveryZones } = useSettings()
 
-  const [activeCatId,     setActiveCatId]     = useState(() => categories?.[0]?.id ?? null)
-  const [search,          setSearch]          = useState('')
-  const [items,           setItems]           = useState([])
-  const [phone,           setPhone]           = useState('')
-  const [clientName,      setClientName]      = useState('')
-  const [address,         setAddress]         = useState('')
-  const [note,            setNote]            = useState('')
-  const [scheduled,       setScheduled]       = useState(false)
-  const [schedDay,        setSchedDay]        = useState('today')
+  const [activeCatId, setActiveCatId] = useState(() => categories?.[0]?.id ?? null)
+  const [search, setSearch] = useState('')
+  const [items, setItems] = useState([])
+  const [phone, setPhone] = useState('')
+  const [clientName, setClientName] = useState('')
+  const [address, setAddress] = useState('')
+  const [note, setNote] = useState('')
+  const [scheduled, setScheduled] = useState(false)
+  const [schedDay, setSchedDay] = useState('today')
   const [schedCustomDate, setSchedCustomDate] = useState('')
-  const [schedTime,       setSchedTime]       = useState('')
+  const [schedTime, setSchedTime] = useState('')
   const [selectedProduct, setSelectedProduct] = useState(null)
 
   // Autocomplete state
-  const [showPhoneSug,           setShowPhoneSug]           = useState(false)
-  const [showNameSug,            setShowNameSug]            = useState(false)
-  const [clientAddresses,        setClientAddresses]        = useState([])  // addresses[] from matched client
-  const [showAddrDropdown,       setShowAddrDropdown]       = useState(false)
+  const [showPhoneSug, setShowPhoneSug] = useState(false)
+  const [showNameSug, setShowNameSug] = useState(false)
+  const [clientAddresses, setClientAddresses] = useState([])  // addresses[] from matched client
+  const [showAddrDropdown, setShowAddrDropdown] = useState(false)
   const phoneRef = useRef(null)
-  const nameRef  = useRef(null)
+  const nameRef = useRef(null)
 
-  const isFlash    = orderType === 'flash'
+  const isFlash = orderType === 'flash'
   const isDelivery = orderType === 'delivery'
-  const isEdit     = mode === 'edit'
+  const isEdit = mode === 'edit'
 
   /* Delivery Cost State */
   const [deliveryCost, setDeliveryCost] = useState(0)
   const [isOutOfZone, setIsOutOfZone] = useState(false)
   const [calculatingDelivery, setCalculatingDelivery] = useState(false)
+
+  /* Inyector dinámico de Google Maps para el PDV */
+  useEffect(() => {
+    if (isDelivery && !window.google && !document.querySelector('script[src*="maps.googleapis.com"]')) {
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=drawing,places,geometry`
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
+  }, [isDelivery])
 
   /* Delivery Calculation Effect with Debounce */
   useEffect(() => {
@@ -89,7 +100,7 @@ export default function OrderBuilderModal({
 
     setCalculatingDelivery(true)
     setIsOutOfZone(false)
-    
+
     const timer = setTimeout(async () => {
       const price = await calculateDeliveryPrice(address.trim(), deliveryZones)
       if (price === null) {
@@ -174,12 +185,12 @@ export default function OrderBuilderModal({
 
     let scheduledAt = null
     if (!isEdit && scheduled && schedTime) {
-      const today    = new Date()
+      const today = new Date()
       const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1)
       let base
-      if (schedDay === 'today')         base = today
+      if (schedDay === 'today') base = today
       else if (schedDay === 'tomorrow') base = tomorrow
-      else                              base = schedCustomDate ? new Date(schedCustomDate) : today
+      else base = schedCustomDate ? new Date(schedCustomDate) : today
       const [h, m] = schedTime.split(':').map(Number)
       base.setHours(h, m, 0, 0)
       scheduledAt = base
@@ -462,13 +473,13 @@ export default function OrderBuilderModal({
                             <div className="obm-calc-error">
                               <span className="obm-calc-error-msg">⚠️ Fuera de zona de reparto</span>
                               <div className="obm-delivery-input-row">
-                                Ingresa costo manual: 
-                                <input 
-                                  type="number" 
-                                  className="obm-delivery-input" 
-                                  value={deliveryCost} 
+                                Ingresa costo manual:
+                                <input
+                                  type="number"
+                                  className="obm-delivery-input"
+                                  value={deliveryCost}
                                   onChange={e => setDeliveryCost(e.target.value)}
-                                  placeholder="$0" 
+                                  placeholder="$0"
                                   min="0"
                                 />
                               </div>
@@ -640,8 +651,8 @@ function IconSearch() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       style={{ flexShrink: 0, color: 'var(--muted)' }}>
-      <circle cx="11" cy="11" r="8"/>
-      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
   )
 }
