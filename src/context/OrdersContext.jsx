@@ -51,6 +51,7 @@ export function OrdersProvider({ children }) {
     let query = supabase
       .from('orders')
       .select('*')
+      .in('status', ['pend', 'preparacion', 'listo'])
 
     if (start) {
       // Si recibimos fecha inicio, aplicamos filtro
@@ -88,6 +89,8 @@ export function OrdersProvider({ children }) {
       .channel('public:orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
         if (payload.eventType === 'INSERT') {
+          if (payload.new.status === 'finalizado' || payload.new.status === 'cancelado') return;
+
           setOrders(prev => {
             // Deduplication inside the setOrders to avoid races from optimistic UI:
             // if we optimistically inserted it, overwrite it with the official DB data
@@ -101,9 +104,17 @@ export function OrdersProvider({ children }) {
           })
         }
         else if (payload.eventType === 'UPDATE') {
-          setOrders(prev => prev.map(o => 
-            o.id === payload.new.id ? mapOrderFromDB(payload.new) : o
-          ))
+          if (payload.new.status === 'finalizado' || payload.new.status === 'cancelado') {
+            setOrders(prev => prev.filter(o => o.id !== payload.new.id));
+          } else {
+            setOrders(prev => {
+              if (prev.some(o => o.id === payload.new.id)) {
+                return prev.map(o => o.id === payload.new.id ? mapOrderFromDB(payload.new) : o);
+              }
+              const newOrders = [mapOrderFromDB(payload.new), ...prev];
+              return newOrders.sort((a,b) => b.createdAt - a.createdAt);
+            });
+          }
         }
         else if (payload.eventType === 'DELETE') {
           setOrders(prev => prev.filter(o => o.id !== payload.old.id))
@@ -134,7 +145,11 @@ export function OrdersProvider({ children }) {
 
   const updateOrder = useCallback(async (orderId, changes) => {
     // UI Optimistic update
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...changes } : o))
+    if (changes.status === 'finalizado' || changes.status === 'cancelado') {
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+    } else {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...changes } : o));
+    }
 
     const dbPayload = mapOrderToDB(changes)
     const { error } = await supabase.from('orders').update(dbPayload).eq('id', orderId)
