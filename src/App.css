@@ -14,7 +14,8 @@
 
 .app-main {
   flex: 1;
-  overflow: hidden;        /* sin scroll global — cada módulo maneja su propio scroll */
+  min-width: 0;            /* evita que Flexbox expanda el contenedor con SVGs/gráficos */
+  overflow: hidden;        /* cada módulo gestiona su propio scroll interno */
   background: var(--surface3);
   position: relative;      /* contexto de posicionamiento para el builder full-area */
   display: flex;
