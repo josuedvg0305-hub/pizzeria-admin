@@ -194,14 +194,18 @@ export default function HistorialPage() {
         (salesFilters.paid.includes('unpaid') && !o.paid)
       )
     if (salesFilters.payMethod.length > 0) {
+      // Normalize filter values to lowercase for case-insensitive comparison
+      const filterNorm = salesFilters.payMethod.map(m => m.toLowerCase())
       result = result.filter(o => {
-        // Canonical paymentMethod field covers single-method and 'Mixto'
-        const canonical = o.paymentMethod ?? o.payMethod
-        if (canonical === 'Mixto' && Array.isArray(o.payments)) {
-          // Include order if ANY of the split payments matches the filter
-          return o.payments.some(p => salesFilters.payMethod.includes(p.method))
+        const canonical = (o.paymentMethod ?? o.payMethod ?? '').toLowerCase()
+        // For Mixto orders: check if any split payment matches the filter
+        if (canonical === 'mixto' && Array.isArray(o.payments) && o.payments.length > 0) {
+          // A filter for 'Mixto' directly matches
+          if (filterNorm.includes('mixto')) return true
+          // Or if any split method matches one of the active filters
+          return o.payments.some(p => filterNorm.includes((p.method ?? '').toLowerCase()))
         }
-        return salesFilters.payMethod.includes(canonical)
+        return filterNorm.includes(canonical)
       })
     }
 
@@ -219,19 +223,27 @@ export default function HistorialPage() {
   const summary = useMemo(() => {
     const valid = displayed.filter(o => !o.deleted && o.status !== 'cancelado')
     const payFilter = salesFilters.payMethod
+    // Normalize for case-insensitive matching
+    const filterNorm = payFilter.map(m => m.toLowerCase())
 
     /* Helper: amount attributable to the active payMethod filter for one order */
     const methodAmount = (o) => {
       if (payFilter.length === 0) return o.total   // no filter → full total
-      // New split-payment orders
-      if (Array.isArray(o.payments) && o.payments.length > 0) {
+
+      const canonical = (o.paymentMethod ?? o.payMethod ?? '').toLowerCase()
+
+      // New split-payment (Mixto) orders: sum only the matching fractions
+      if (canonical === 'mixto' && Array.isArray(o.payments) && o.payments.length > 0) {
+        // If filter explicitly includes 'Mixto', return the full total
+        if (filterNorm.includes('mixto')) return o.total
+        // Otherwise sum only the fractions that match the active method filters
         return o.payments
-          .filter(p => payFilter.includes(p.method))
+          .filter(p => filterNorm.includes((p.method ?? '').toLowerCase()))
           .reduce((s, p) => s + (Number(p.amount) || 0), 0)
       }
-      // Legacy single-method orders
-      const canonical = o.paymentMethod ?? o.payMethod
-      return payFilter.includes(canonical) ? o.total : 0
+
+      // Legacy / single-method orders: all-or-nothing
+      return filterNorm.includes(canonical) ? o.total : 0
     }
 
     return {

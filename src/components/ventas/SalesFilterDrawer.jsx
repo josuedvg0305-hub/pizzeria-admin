@@ -64,9 +64,10 @@ const CATS = [
     key: 'payMethod',
     label: 'Método de pago',
     options: [
-      { value: 'efectivo',       label: 'Efectivo' },
-      { value: 'tarjeta',        label: 'Tarjeta' },
-      { value: 'transferencia',  label: 'Transferencia' },
+      { value: 'Efectivo',      label: 'Efectivo' },
+      { value: 'Tarjeta',       label: 'Tarjeta' },
+      { value: 'Transferencia', label: 'Transferencia' },
+      { value: 'Mixto',         label: 'Mixto (Split)' },
     ],
   },
 ]
