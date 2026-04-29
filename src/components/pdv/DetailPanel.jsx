@@ -533,7 +533,7 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
               {/* ── Print button + popover ── */}
               <div className="dp-print-wrap" ref={printPopoverRef}>
                 <button
-                  className="dp-print-btn"
+                  className="dp-print-btn p-2 bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition-colors text-xl"
                   title="Imprimir ticket"
                   onClick={() => setPrintOpen(v => !v)}
                 >

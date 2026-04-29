@@ -1,6 +1,18 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { computeOrderTotal } from '../../utils/orderMath'
+import OrderPrintTemplate from './OrderPrintTemplate'
 import './OrderRow.css'
+
+function IconPrinter() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9" />
+      <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+      <rect x="6" y="14" width="12" height="8" />
+    </svg>
+  )
+}
 
 const fmt = (n) => `$${Number(n).toLocaleString('es-CL')}`
 
@@ -67,6 +79,37 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
   const tc    = TYPE_CONFIG[order.type]    ?? { icon: '📋', label: order.type }
   const state = ORDER_STATES[order.status] ?? ORDER_STATES.pend
 
+  /* Print state */
+  const [printMode, setPrintMode] = useState(null)   // null | 'cocina' | 'cliente'
+  const [printOpen, setPrintOpen] = useState(false)  // popover visible
+  const printPopoverRef = useRef(null)
+
+  /* 1) Disparar window.print() después de que React haya pintado el ticket */
+  useEffect(() => {
+    if (!printMode) return
+    const timer = setTimeout(() => window.print(), 150)
+    return () => clearTimeout(timer)
+  }, [printMode])
+
+  /* 2) Resetear printMode cuando el diálogo de impresión se cierre (o se cancele) */
+  useEffect(() => {
+    const handler = () => setPrintMode(null)
+    window.addEventListener('afterprint', handler)
+    return () => window.removeEventListener('afterprint', handler)
+  }, [])
+
+  /* Cerrar popover al hacer clic fuera */
+  useEffect(() => {
+    if (!printOpen) return
+    const handler = (e) => {
+      if (printPopoverRef.current && !printPopoverRef.current.contains(e.target)) {
+        setPrintOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [printOpen])
+
   const grandTotal = useMemo(() => computeOrderTotal(order), [order])
 
   const isDone = order.status === 'finalizado' || order.status === 'cancelado'
@@ -99,7 +142,7 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
   }
 
   const showCancel = order.status === 'pend' || order.status === 'preparacion' || order.status === 'listo'
-  const showPay    = !order.paid && (order.status !== 'cancelado')
+  const isCanceled = order.status === 'cancelado'
 
   return (
     <div
@@ -152,6 +195,33 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
 
       {/* ── ACCIONES ── */}
       <div className="or-cell or-cell--actions" onClick={e => e.stopPropagation()}>
+        {/* ── Botón Imprimir (atajo) ── */}
+        <div className="relative" ref={printPopoverRef}>
+          <button
+            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition-colors text-xl flex items-center justify-center mr-1"
+            title="Imprimir ticket"
+            onClick={() => setPrintOpen(v => !v)}
+          >
+            <IconPrinter />
+          </button>
+          {printOpen && (
+            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 shadow-xl rounded-md z-50 flex flex-col w-48 overflow-hidden text-sm">
+              <button
+                className="px-4 py-2 text-left font-semibold text-gray-700 hover:bg-gray-100 transition-colors border-b border-gray-100"
+                onClick={() => { setPrintOpen(false); setPrintMode('cocina') }}
+              >
+                🍕 Ticket de cocina
+              </button>
+              <button
+                className="px-4 py-2 text-left font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                onClick={() => { setPrintOpen(false); setPrintMode('cliente') }}
+              >
+                🧾 Ticket de cliente
+              </button>
+            </div>
+          )}
+        </div>
+
         {showCancel && (
           <button
             className="or-btn or-btn--cancel !text-sm !font-semibold"
@@ -161,17 +231,30 @@ export default function OrderRow({ order, selected, onClick, onAction }) {
             Cancelar
           </button>
         )}
-        {showPay && (
-          <button
-            className="or-btn or-btn--pay !text-sm !font-semibold"
-            onClick={() => onAction('pay')}
-            title="Cobrar pedido"
-          >
-            Cobrar
-          </button>
+        {!isCanceled && (
+          order.paid ? (
+            <span className="text-green-600 font-semibold px-2 py-1 text-sm flex items-center justify-center">
+              ✓ Pagado
+            </span>
+          ) : (
+            <button
+              className="or-btn or-btn--pay !text-sm !font-semibold"
+              onClick={() => onAction('pay')}
+              title="Cobrar pedido"
+            >
+              Cobrar
+            </button>
+          )
         )}
         {primaryBtn}
       </div>
+
+      {/* Renderizado condicional del ticket invisible para impresión */}
+      {printMode && (
+        <div className="hidden print:block print:fixed print:inset-0 print:bg-white print:z-[9999]">
+          <OrderPrintTemplate order={order} mode={printMode} />
+        </div>
+      )}
     </div>
   )
 }
