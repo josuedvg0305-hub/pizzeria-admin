@@ -52,8 +52,8 @@ const ORDER_STATES = {
 }
 
 const PAYMENT_METHODS = [
-  { id: 'Efectivo', label: 'Efectivo', icon: '💵' },
-  { id: 'Débito', label: 'Débito', icon: '💳' },
+  { id: 'Efectivo',     label: 'Efectivo',     icon: '💵' },
+  { id: 'Tarjeta',      label: 'Tarjeta',      icon: '💳' },
   { id: 'Transferencia', label: 'Transferencia', icon: '📱' },
 ]
 
@@ -1052,12 +1052,34 @@ export default function DetailPanel({ order, onClose, onAction, onDelete, onUpda
             {/* Payment method */}
             <div className="dp-payment-methods">
               {order.paid ? (
-                <div className="dp-paid-row" onClick={() => onAction(order.id, 'pay')} style={{ cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={e => e.currentTarget.style.opacity = 0.8} onMouseOut={e => e.currentTarget.style.opacity = 1} title="Editar método de pago">
-                  <span className="dp-payment-method-label">
-                    {PAYMENT_METHODS.find(m => m.id === order.paymentMethod)?.icon ?? '💳'}{' '}
-                    {order.paymentMethod}
-                  </span>
-                  <span className="dp-paid-badge">✓ Cobrado ✏️</span>
+                <div
+                  className="dp-paid-row"
+                  onClick={() => onAction(order.id, 'pay')}
+                  style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                  onMouseOver={e => e.currentTarget.style.opacity = 0.8}
+                  onMouseOut={e => e.currentTarget.style.opacity = 1}
+                  title="Editar método de pago"
+                >
+                  {/* Multi-payment display */}
+                  {Array.isArray(order.payments) && order.payments.length > 1 ? (
+                    <div className="dp-split-chips">
+                      {order.payments.map((p, i) => (
+                        <span key={i} className="dp-split-chip">
+                          {PAYMENT_METHODS.find(m => m.id === p.method)?.icon ?? '💳'}{' '}
+                          {p.method}: <strong>${Number(p.amount).toLocaleString('es-CL')}</strong>
+                        </span>
+                      ))}
+                      <span className="dp-paid-badge">✓ Cobrado ✏️</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="dp-payment-method-label">
+                        {PAYMENT_METHODS.find(m => m.id === order.paymentMethod)?.icon ?? '💳'}{' '}
+                        {order.paymentMethod}
+                      </span>
+                      <span className="dp-paid-badge">✓ Cobrado ✏️</span>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="dp-method-btns">

@@ -193,8 +193,17 @@ export default function HistorialPage() {
         (salesFilters.paid.includes('paid')   && o.paid) ||
         (salesFilters.paid.includes('unpaid') && !o.paid)
       )
-    if (salesFilters.payMethod.length > 0)
-      result = result.filter(o => salesFilters.payMethod.includes(o.paymentMethod ?? o.payMethod))
+    if (salesFilters.payMethod.length > 0) {
+      result = result.filter(o => {
+        // Canonical paymentMethod field covers single-method and 'Mixto'
+        const canonical = o.paymentMethod ?? o.payMethod
+        if (canonical === 'Mixto' && Array.isArray(o.payments)) {
+          // Include order if ANY of the split payments matches the filter
+          return o.payments.some(p => salesFilters.payMethod.includes(p.method))
+        }
+        return salesFilters.payMethod.includes(canonical)
+      })
+    }
 
     /* Sort by newest */
     result.sort((a, b) => {
@@ -209,11 +218,27 @@ export default function HistorialPage() {
   /* Summary — exclude deleted and cancelled */
   const summary = useMemo(() => {
     const valid = displayed.filter(o => !o.deleted && o.status !== 'cancelado')
+    const payFilter = salesFilters.payMethod
+
+    /* Helper: amount attributable to the active payMethod filter for one order */
+    const methodAmount = (o) => {
+      if (payFilter.length === 0) return o.total   // no filter → full total
+      // New split-payment orders
+      if (Array.isArray(o.payments) && o.payments.length > 0) {
+        return o.payments
+          .filter(p => payFilter.includes(p.method))
+          .reduce((s, p) => s + (Number(p.amount) || 0), 0)
+      }
+      // Legacy single-method orders
+      const canonical = o.paymentMethod ?? o.payMethod
+      return payFilter.includes(canonical) ? o.total : 0
+    }
+
     return {
       count: valid.length,
-      total: valid.reduce((s, o) => s + o.total, 0),
+      total: valid.reduce((s, o) => s + methodAmount(o), 0),
     }
-  }, [displayed])
+  }, [displayed, salesFilters.payMethod])
 
   /* Exportation to CSV (Excel) */
   const handleExportExcel = () => {

@@ -1,17 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './PaymentModal.css'
 
 const fmt = (n) => `$${Number(n).toLocaleString('es-CL')}`
 
 const METHODS = [
-  { id: 'efectivo',      label: 'Efectivo',       emoji: '💵' },
-  { id: 'debito',        label: 'Débito',          emoji: '💳' },
-  { id: 'transferencia', label: 'Transferencia',   emoji: '📱' },
+  { id: 'Efectivo',     label: 'Efectivo',     emoji: '💵' },
+  { id: 'Tarjeta',      label: 'Tarjeta',      emoji: '💳' },
+  { id: 'Transferencia', label: 'Transferencia', emoji: '📱' },
 ]
 
+/** Build the canonical payments array from the per-method input map */
+function buildPayments(amounts) {
+  return METHODS
+    .map(m => ({ method: m.id, amount: Number(amounts[m.id]) || 0 }))
+    .filter(p => p.amount > 0)
+}
+
 export default function PaymentModal({ order, onConfirm, onClose }) {
-  const [payMethod,     setPayMethod]     = useState('efectivo')
-  const [cashReceived,  setCashReceived]  = useState('')
+  // amounts[method.id] = string value from input
+  const [amounts, setAmounts] = useState(() =>
+    Object.fromEntries(METHODS.map(m => [m.id, '']))
+  )
 
   /* Escape to close */
   useEffect(() => {
@@ -20,14 +29,34 @@ export default function PaymentModal({ order, onConfirm, onClose }) {
     return () => document.removeEventListener('keydown', h)
   }, [onClose])
 
-  const total    = order.total
-  const cashAmt  = cashReceived === '' ? NaN : Number(cashReceived)
-  const change   = isNaN(cashAmt) ? null : cashAmt - total
+  const total = order.total
+
+  /* Derived sums */
+  const paidSum   = useMemo(() => METHODS.reduce((s, m) => s + (Number(amounts[m.id]) || 0), 0), [amounts])
+  const cashAmt   = Number(amounts['Efectivo']) || 0
+  const nonCash   = paidSum - cashAmt
+  const change    = cashAmt > 0 && paidSum >= total ? cashAmt - (total - nonCash) : null
+  const remaining = Math.max(0, total - paidSum)
+
+  /* Confirm enabled: full amount covered (cash can exceed for change) */
+  const canConfirm = paidSum >= total
+
+  const setAmount = (methodId, val) =>
+    setAmounts(prev => ({ ...prev, [methodId]: val }))
+
+  /* Quick-fill the remaining into a method */
+  const fillRemaining = (methodId) => {
+    if (remaining <= 0) return
+    setAmounts(prev => ({ ...prev, [methodId]: String((Number(prev[methodId]) || 0) + remaining) }))
+  }
 
   const handleConfirm = () => {
+    if (!canConfirm) return
+    const payments = buildPayments(amounts)
+    const paymentMethod = payments.length === 1 ? payments[0].method : 'Mixto'
     onConfirm({
-      paymentMethod: METHODS.find(m => m.id === payMethod)?.label ?? payMethod,
-      payMethod,
+      paymentMethod,   // canonical single-field: label string or 'Mixto'
+      payments,        // full split array for DB
       discount: 0,
       tip: 0,
       total,
@@ -53,53 +82,61 @@ export default function PaymentModal({ order, onConfirm, onClose }) {
             <span className="paym-total-amount">{fmt(total)}</span>
           </div>
 
-          {/* 2. Métodos de pago */}
-          <div className="paym-methods">
-            {METHODS.map(m => (
-              <button
-                key={m.id}
-                className={`paym-method-btn${payMethod === m.id ? ' paym-method-btn--active' : ''}`}
-                onClick={() => setPayMethod(m.id)}
-              >
-                <span className="paym-method-emoji">{m.emoji}</span>
-                <span>{m.label}</span>
-              </button>
-            ))}
+          {/* 2. Per-method input rows */}
+          <div className="paym-split-list">
+            {METHODS.map(m => {
+              const val = amounts[m.id]
+              const num = Number(val) || 0
+              return (
+                <div key={m.id} className="paym-split-row">
+                  <span className="paym-split-emoji">{m.emoji}</span>
+                  <span className="paym-split-label">{m.label}</span>
+                  <div className="paym-cash-input-wrap" style={{ flex: 1 }}>
+                    <span className="paym-cash-prefix">$</span>
+                    <input
+                      className="paym-cash-input"
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={val}
+                      onChange={e => setAmount(m.id, e.target.value)}
+                    />
+                  </div>
+                  {remaining > 0 && num === 0 && (
+                    <button
+                      className="paym-fill-btn"
+                      type="button"
+                      title="Completar con el restante"
+                      onClick={() => fillRemaining(m.id)}
+                    >
+                      +{fmt(remaining)}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
-          {/* 3. Sección efectivo */}
-          {payMethod === 'efectivo' && (
-            <div className="paym-cash-section">
-              <label className="paym-field-label">Monto recibido</label>
-              <div className="paym-cash-input-wrap">
-                <span className="paym-cash-prefix">$</span>
-                <input
-                  className="paym-cash-input"
-                  type="number"
-                  min="0"
-                  placeholder={String(total)}
-                  value={cashReceived}
-                  onChange={e => setCashReceived(e.target.value)}
-                  autoFocus
-                />
-              </div>
-
-              {change !== null && (
-                <div className={`paym-change${change < 0 ? ' paym-change--insuf' : ''}`}>
-                  {change < 0
-                    ? 'Monto insuficiente'
-                    : <>Vuelto: <strong>{fmt(change)}</strong></>
-                  }
-                </div>
-              )}
-            </div>
-          )}
+          {/* 3. Status bar */}
+          <div className={`paym-status-bar ${canConfirm ? 'paym-status-bar--ok' : remaining > 0 ? '' : 'paym-status-bar--excess'}`}>
+            {remaining > 0 ? (
+              <span>Faltan <strong>{fmt(remaining)}</strong> por asignar</span>
+            ) : change !== null && change > 0 ? (
+              <span>Vuelto en efectivo: <strong>{fmt(change)}</strong></span>
+            ) : (
+              <span>✓ Monto cubierto</span>
+            )}
+          </div>
 
         </div>
 
         {/* ── Footer ── */}
         <div className="paym-footer">
-          <button className="paym-confirm-btn" onClick={handleConfirm}>
+          <button
+            className="paym-confirm-btn"
+            onClick={handleConfirm}
+            disabled={!canConfirm}
+          >
             Confirmar pago
           </button>
         </div>
