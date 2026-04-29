@@ -31,7 +31,7 @@ function mapOrderToDB(o) {
   if (o.discountMode   !== undefined) { dbData.discount_mode   = o.discountMode;  delete dbData.discountMode }
   if (o.discountVal    !== undefined) { dbData.discount_val    = o.discountVal;   delete dbData.discountVal }
   if (o.paymentMethod  !== undefined) { dbData.payment_method  = o.paymentMethod; delete dbData.paymentMethod }
-  // `payments` key matches the DB column name exactly — no rename needed, just leave it in dbData
+  if (o.payments       !== undefined) { dbData.payments        = o.payments || null; }
 
   // Strip all legacy / frontend-only fields that must never reach the DB
   delete dbData.payMethod      // legacy alias — canonical is payment_method

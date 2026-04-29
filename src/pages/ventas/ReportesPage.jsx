@@ -387,7 +387,7 @@ export default function ReportesPage() {
 
     const q = (s, e) =>
       supabase.from('orders')
-        .select('id, num, type, status, total, items, created_at')
+        .select('id, num, type, status, total, items, created_at, payments')
         .neq('status', 'cancelado')
         .eq('deleted', false)
         .gte('created_at', s.toISOString())
