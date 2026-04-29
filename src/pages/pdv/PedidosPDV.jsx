@@ -306,14 +306,16 @@ export default function PedidosPDV() {
   }
 
   // NOTE: only `paymentMethod` is the canonical field (payMethod was a legacy alias).
+  // `payments` carries the split-payment breakdown array for the DB `payments` JSONB column.
   // We capture the order ID at call-time instead of relying on the `payingOrder`
   // closure which could be stale if a realtime event updated the order meanwhile.
-  const handlePaymentConfirm = ({ paymentMethod, discount, tip, total: finalTotal }) => {
+  const handlePaymentConfirm = ({ paymentMethod, payments, discount, tip, total: finalTotal }) => {
     const orderId = payingOrder?.id
     if (!orderId) return
     updateOrder(orderId, {
       paid:          true,
-      paymentMethod,   // single canonical field → maps to payment_method in DB
+      paymentMethod,   // canonical field → maps to payment_method in DB
+      payments:      payments ?? [],  // split-payment JSONB array → maps to payments in DB
       discount,
       tip,
       total:         finalTotal,

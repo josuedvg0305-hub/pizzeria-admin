@@ -23,6 +23,7 @@ function mapOrderFromDB(o) {
 // Mapper: Frontend -> DB
 // Only `paymentMethod` is the canonical frontend field; it maps to `payment_method`.
 // Any accidental `payMethod` key in the payload is stripped before hitting Supabase.
+// `payments` (JSONB array) is passed through as-is — column name matches the frontend key.
 function mapOrderToDB(o) {
   const dbData = { ...o }
 
@@ -30,6 +31,7 @@ function mapOrderToDB(o) {
   if (o.discountMode   !== undefined) { dbData.discount_mode   = o.discountMode;  delete dbData.discountMode }
   if (o.discountVal    !== undefined) { dbData.discount_val    = o.discountVal;   delete dbData.discountVal }
   if (o.paymentMethod  !== undefined) { dbData.payment_method  = o.paymentMethod; delete dbData.paymentMethod }
+  // `payments` key matches the DB column name exactly — no rename needed, just leave it in dbData
 
   // Strip all legacy / frontend-only fields that must never reach the DB
   delete dbData.payMethod      // legacy alias — canonical is payment_method
@@ -154,7 +156,14 @@ export function OrdersProvider({ children }) {
     const dbPayload = mapOrderToDB(changes)
     const { error } = await supabase.from('orders').update(dbPayload).eq('id', orderId)
     if (error) {
-      console.error('Error updating order:', error)
+      // Surface the full Supabase error so it can be debugged in the console
+      console.error(
+        `[OrdersContext] updateOrder failed for order ${orderId}:`,
+        error.message,
+        '| code:', error.code,
+        '| details:', error.details,
+        '| hint:', error.hint,
+      )
     }
   }, [])
 
