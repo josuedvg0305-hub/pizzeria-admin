@@ -309,15 +309,13 @@ export default function PedidosPDV() {
   // `payments` carries the split-payment breakdown array for the DB `payments` JSONB column.
   // We capture the order ID at call-time instead of relying on the `payingOrder`
   // closure which could be stale if a realtime event updated the order meanwhile.
-  const handlePaymentConfirm = ({ paymentMethod, payments, discount, tip, total: finalTotal }) => {
+  const handlePaymentConfirm = ({ paymentMethod, payments, total: finalTotal }) => {
     const orderId = payingOrder?.id
     if (!orderId) return
     updateOrder(orderId, {
       paid:          true,
       paymentMethod,   // canonical field → maps to payment_method in DB
       payments:      payments ?? [],  // split-payment JSONB array → maps to payments in DB
-      discount,
-      tip,
       total:         finalTotal,
     })
     setModal(null)

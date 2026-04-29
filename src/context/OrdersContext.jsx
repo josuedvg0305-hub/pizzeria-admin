@@ -38,6 +38,8 @@ function mapOrderToDB(o) {
   delete dbData.createdAt      // created_at is a DB default
   delete dbData.closedAt
   delete dbData.scheduledAt
+  delete dbData.tip            // exists only within 'charges' JSONB
+  delete dbData.discount       // exists only within 'charges' or as discount_amt calculation
 
   // Date fields: only include in payload when explicitly supplied
   if (o.closedAt    !== undefined) dbData.closed_at    = o.closedAt    instanceof Date ? o.closedAt.toISOString()    : o.closedAt
