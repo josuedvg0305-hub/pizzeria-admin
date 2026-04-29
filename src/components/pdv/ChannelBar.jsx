@@ -7,7 +7,11 @@ const CHANNELS = [
   { id: 'mesas',     label: 'Mesas',       Icon: IconTable  },
 ]
 
-export default function ChannelBar({ active, counts, onSelect, onNewOrder }) {
+export default function ChannelBar({
+  active, counts, onSelect, onNewOrder,
+  searchQuery, isSearchOpen, onSearch, onToggleSearch,
+  onRefresh, isRefreshing,
+}) {
   return (
     <div className="channel-bar">
       <div className="channel-tabs">
@@ -25,12 +29,38 @@ export default function ChannelBar({ active, counts, onSelect, onNewOrder }) {
       </div>
 
       <div className="channel-actions">
-        <button className="cb-icon-btn" title="Buscar pedido">
+        {/* ── Search ── */}
+        {isSearchOpen && (
+          <input
+            type="text"
+            autoFocus
+            placeholder="N°, Nombre o Teléfono..."
+            value={searchQuery}
+            onChange={e => onSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Escape' && onToggleSearch()}
+            className="cb-search-input"
+          />
+        )}
+        <button
+          className={`cb-icon-btn ${isSearchOpen ? 'cb-icon-btn--active' : ''}`}
+          title={isSearchOpen ? 'Cerrar búsqueda' : 'Buscar pedido'}
+          onClick={onToggleSearch}
+        >
           <IconSearch />
         </button>
-        <button className="cb-icon-btn" title="Actualizar">
-          <IconRefresh />
+
+        {/* ── Refresh ── */}
+        <button
+          className="cb-icon-btn"
+          title="Actualizar pedidos"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+        >
+          <span className={isRefreshing ? 'cb-spin' : ''}>
+            <IconRefresh />
+          </span>
         </button>
+
         <button className="btn btn-blue" onClick={onNewOrder}>
           + Nuevo pedido
         </button>

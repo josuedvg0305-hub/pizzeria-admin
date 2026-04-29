@@ -29,13 +29,18 @@ const TYPE_TO_CHANNEL = {
 
 export default function PedidosPDV() {
   const { categories, modifierGroups } = useMenu()
-  const { orders, addOrder, updateOrder, deleteOrder } = useOrders()
+  const { orders, addOrder, updateOrder, deleteOrder, fetchOrders } = useOrders()
   const { registerClientFromOrder } = useClients()
 
   const [selectedOrderId, setSelectedOrderId] = useState(null)
   const [activeChannel,   setActiveChannel]   = useState('todos')
   const [activeFilter,    setActiveFilter]    = useState('all')
   const [advFilters,      setAdvFilters]      = useState(INIT_ADV_FILTERS)
+
+  /* ── Search & Refresh UI state ── */
+  const [searchQuery,   setSearchQuery]   = useState('')
+  const [isSearchOpen,  setIsSearchOpen]  = useState(false)
+  const [isRefreshing,  setIsRefreshing]  = useState(false)
 
   /* ── Modal machine ── */
   const [modal,        setModal]        = useState(null)
@@ -92,8 +97,19 @@ export default function PedidosPDV() {
         (advFilters.scheduled.includes('immediate') && !o.scheduledAt)
       )
 
+    /* ── Search filter (last pass, narrowest) ── */
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase()
+      const qDigits = q.replace(/\D/g, '')
+      result = result.filter(o =>
+        String(o.num).includes(q) ||
+        (o.client?.name ?? '').toLowerCase().includes(q) ||
+        (qDigits && (o.client?.phone ?? '').replace(/\D/g, '').includes(qDigits))
+      )
+    }
+
     return result
-  }, [channelOrders, activeFilter, advFilters])
+  }, [channelOrders, activeFilter, advFilters, searchQuery])
 
   const channelCounts = useMemo(() => {
     const valid = activeOrders.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado')
@@ -179,6 +195,29 @@ export default function PedidosPDV() {
       .filter(o => ch === 'todos' || CHANNEL_TYPES[ch]?.includes(o.type))
       .some(o => o.id === selectedOrderId)
     if (!stillVisible) setSelectedOrderId(null)
+  }
+
+  /* ── Search toggle ── */
+  const handleToggleSearch = () => {
+    setIsSearchOpen(prev => {
+      if (prev) setSearchQuery('')   // clear query on close
+      return !prev
+    })
+  }
+
+  /* ── Refresh ── */
+  const handleRefresh = async () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    const now = new Date()
+    const start = new Date(now); start.setHours(0, 0, 0, 0)
+    const end   = new Date(now); end.setHours(23, 59, 59, 999)
+    try {
+      await fetchOrders(start, end)
+    } finally {
+      // Minimum visible spin so the user gets clear feedback
+      setTimeout(() => setIsRefreshing(false), 600)
+    }
   }
 
   /* ── New order flow ── */
@@ -290,6 +329,12 @@ export default function PedidosPDV() {
         counts={channelCounts}
         onSelect={handleChannelSwitch}
         onNewOrder={handleNewOrder}
+        searchQuery={searchQuery}
+        isSearchOpen={isSearchOpen}
+        onSearch={setSearchQuery}
+        onToggleSearch={handleToggleSearch}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
       />
 
       <FilterBar

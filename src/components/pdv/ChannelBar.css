@@ -106,3 +106,38 @@
 }
 .btn-blue:hover  { background: var(--blue-dark); }
 .btn-blue:active { transform: scale(.97); }
+
+/* ── Search input ── */
+.cb-search-input {
+  height: 32px;
+  border: 1px solid var(--blue);
+  border-radius: var(--radius);
+  padding: 0 10px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  width: 200px;
+  outline: none;
+  transition: width .2s ease, box-shadow .15s;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 15%, transparent);
+}
+.cb-search-input::placeholder { color: var(--muted); }
+
+/* Active state for the search toggle button */
+.cb-icon-btn--active {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+/* Spin animation for the refresh icon */
+.cb-spin {
+  display: inline-flex;
+  animation: cb-rotate 0.7s linear infinite;
+}
+
+@keyframes cb-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
