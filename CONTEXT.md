@@ -358,8 +358,9 @@ Filtro "En curso" en FilterBar cubre `preparacion` + `listo`.
   client:        { name, phone, addr } | null,
   note:          string | null,
   comments:      string | null,
-  paymentMethod: string | null,    // 'Efectivo' | 'Débito' | 'Transferencia'
+  paymentMethod: string | null,    // 'Efectivo' | 'Tarjeta' | 'Transferencia' | 'Mixto'
   payMethod:     string | null,
+  payments:      [{ method: string, amount: number }] | null,
   discount:      number,
   charges: {
     delivery:  number,
@@ -889,7 +890,7 @@ El script SQL inicial está en `supabase_ddl_v1.sql` (esquema de referencia hist
 | `categories` | `MenuContext` | IDs numéricos, igual que `generateId()` |
 | `modifier_groups` | `MenuContext` | `options` en JSONB (incluye `priceByVariant`) |
 | `products` | `MenuContext` | `images`, `variants`, `modifier_group_ids`, `stock` en JSONB |
-| `orders` | `OrdersContext` | `items` y `charges` en JSONB; FK a `clients` + snapshot |
+| `orders` | `OrdersContext` | `items`, `charges` y `payments` (para Pagos Mixtos) en JSONB; FK a `clients` + snapshot |
 | `delivery_zones` | `SettingsContext` | `polygon` JSONB; reemplaza el `localStorage` actual |
 
 ### Decisiones de diseño

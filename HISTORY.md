@@ -58,3 +58,15 @@ Este archivo conserva el registro histórico de sesiones, refactorizaciones y de
 - **Migración a React Router**: Se derogó la regla de navegación por estado (`activePage`) y se implementó `react-router-dom` v6 de forma oficial.
 - **Code Splitting y Optimización**: Se aplicó `React.lazy` y `<Suspense>` para diferir la carga de módulos pesados. Esto optimiza radicalmente la carga inicial aislando el peso de `recharts` (Reportes) y SDKs externos (Configuración/Mapas) del bundle de la vista principal del PDV.
 - **Nuevos Módulos (WIP)**: Se creó un placeholder temporal para el módulo de Cocina (`/cocina`) inyectado en el sistema de enrutamiento con el mismo patrón arquitectónico de Lazy Loading.
+
+---
+
+## Sesión del 28 de Abril 2026 - Optimización Core, UX y Pagos Mixtos
+
+- **Dieta del OrdersContext:** Se optimizó el flujo de WebSockets y el fetch inicial para que el PDV solo retenga en memoria RAM los pedidos activos (`pend`, `preparacion`, `listo`), purgando automáticamente los finalizados/cancelados.
+- **Pestaña TODOS en PDV:** Se agregó una vista panorámica en `PedidosPDV.jsx` para ver simultáneamente los pedidos de todos los canales.
+- **Sincronización Matemática:** Se corrigió el cálculo total en `OrderRow.jsx` para que coincida con `DetailPanel`, sumando cargos extras (delivery, empaque) y restando descuentos.
+- **Buscador y Refresh en Vivo:** Se activaron los botones del header en el PDV. La lupa hace un filtrado local instantáneo (por N° pedido, nombre o teléfono) y el botón ↻ fuerza un re-fetch a Supabase.
+- **Pagos Mixtos (Split Payments):** Se cambió la nomenclatura "Débito" por "Tarjeta". Se añadió soporte para pagar un pedido combinando métodos. Se agregó la columna `payments` (JSONB) en Supabase. Se filtró el payload de guardado para evitar rechazos por la columna fantasma `tip`.
+- **Filtros de Historial:** Se reescribió la matemática de `HistorialPage.jsx` para que, al filtrar por método de pago, "abra" los pedidos mixtos y sume en el header únicamente la fracción pagada con ese método específico.
+- **UX de Impresión y UI:** Se agrandó el botón de impresión en el detalle, se agregó un atajo de impresión directo en el `OrderRow`, y se reemplazó el botón "Cobrar" por un texto verde de "✓ Pagado" para evitar saltos en la interfaz.
