@@ -60,6 +60,7 @@ export default function HistorialPage() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [historicalOrders, setHistoricalOrders] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [searchQuery,   setSearchQuery]   = useState('')
 
   const fetchHistoricalData = async (start = null, end = null) => {
     setLoadingHistory(true)
@@ -121,14 +122,14 @@ export default function HistorialPage() {
     fetchHistoricalData(startD, endD)
   }, [quickFilter])
 
-  const handleCustomSearch = () => {
-    if (!dateFrom || !dateTo) {
-      alert("Debes seleccionar ambas fechas"); return;
-    }
+  // Auto-fetch for custom date range when both dates are set
+  useEffect(() => {
+    if (quickFilter !== 'custom') return
+    if (!dateFrom || !dateTo) return
     const start = new Date(dateFrom + 'T00:00:00')
-    const end = new Date(dateTo + 'T23:59:59.999')
+    const end   = new Date(dateTo   + 'T23:59:59.999')
     fetchHistoricalData(start, end)
-  }
+  }, [quickFilter, dateFrom, dateTo])
 
   const handleReload = () => {
     if (dateFrom && dateTo) {
@@ -209,6 +210,18 @@ export default function HistorialPage() {
       })
     }
 
+    /* Live text search — by order num, client name, or phone */
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim()
+      const qDigits = q.replace(/\D/g, '')
+      result = result.filter(o => {
+        if (String(o.num).includes(q)) return true
+        if (o.client?.name?.toLowerCase().includes(q.toLowerCase())) return true
+        if (qDigits && o.client?.phone?.replace(/\D/g, '').includes(qDigits)) return true
+        return false
+      })
+    }
+
     /* Sort by newest */
     result.sort((a, b) => {
       const da = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt)
@@ -217,7 +230,7 @@ export default function HistorialPage() {
     })
 
     return result
-  }, [historicalOrders, dateFrom, dateTo, salesFilters, originFilter])
+  }, [historicalOrders, dateFrom, dateTo, salesFilters, originFilter, searchQuery])
 
   /* Summary — exclude deleted and cancelled */
   const summary = useMemo(() => {
@@ -413,12 +426,19 @@ export default function HistorialPage() {
 
         <div className="hp-tt-right">
           <button className="btn btn-ghost btn-icon" title="Recargar" onClick={handleReload} disabled={loadingHistory}>↻</button>
-          
-          {quickFilter === 'custom' && (
-            <button className="btn btn-secondary" title="Buscar fechas personalizadas" onClick={handleCustomSearch}>Buscar</button>
-          )}
-          
-          <button className="btn btn-ghost btn-icon" title="Buscar" style={{ display: quickFilter === 'custom' ? 'none' : 'inline-block' }}>🔍</button>
+
+          {/* Live search input */}
+          <div className="relative flex items-center">
+            <span className="absolute left-2.5 text-[var(--muted)] pointer-events-none text-sm">🔍</span>
+            <input
+              type="text"
+              placeholder="N°, Nombre o Teléfono..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="form-input text-sm py-1.5 pl-8 pr-3 w-56 rounded-md border border-[var(--border)] focus:border-[var(--brand)] outline-none"
+            />
+          </div>
+
           <button className="btn btn-secondary">Reporte WhatsApp</button>
           <button className="btn btn-success" onClick={handleExportExcel}>Excel</button>
           <button className="btn btn-primary">Exportar</button>
