@@ -19,6 +19,10 @@ export default function SettingsPage() {
   const [pendingPolygon, setPendingPolygon] = useState(null)
   const [pendingMapRef,  setPendingMapRef]  = useState(null) // instancia polygon de gmaps
 
+  /* Estado de edición de zona existente */
+  const [editingZone, setEditingZone] = useState(null)
+  const [editedPolygonCoords, setEditedPolygonCoords] = useState(null)
+
   /* Formulario de nueva zona */
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
@@ -36,14 +40,24 @@ export default function SettingsPage() {
     setSelectedZoneId(id)
   }, [])
 
-  /* ── Guardar nueva zona ── */
+  /* ── Guardar zona ── */
   const handleSaveZone = () => {
     const name  = form.name.trim()
     const price = Number(form.price)
 
     if (!name)            return setFormError('El nombre de la zona es obligatorio.')
-    if (!pendingPolygon)  return setFormError('Dibuja el polígono en el mapa antes de guardar.')
     if (isNaN(price) || price < 0) return setFormError('El precio debe ser un número positivo.')
+
+    if (editingZone) {
+      updateZone(editingZone.id, { name, price, color: form.color, polygon: editedPolygonCoords || editingZone.polygon })
+      setEditingZone(null)
+      setEditedPolygonCoords(null)
+      setForm(prev => ({ ...EMPTY_FORM, color: ZONE_COLORS[(deliveryZones.length + 1) % ZONE_COLORS.length] }))
+      setFormError('')
+      return
+    }
+
+    if (!pendingPolygon)  return setFormError('Dibuja el polígono en el mapa antes de guardar.')
 
     addZone({ name, price, color: form.color, polygon: pendingPolygon })
 
@@ -55,6 +69,20 @@ export default function SettingsPage() {
       ...EMPTY_FORM,
       color: ZONE_COLORS[(deliveryZones.length + 1) % ZONE_COLORS.length],
     }))
+    setFormError('')
+  }
+
+  const handleEditZone = (zone) => {
+    setEditingZone(zone)
+    setForm({ name: zone.name, price: zone.price, color: zone.color })
+    setEditedPolygonCoords(null)
+    setFormError('')
+  }
+
+  const handleCancelEdit = () => {
+    setEditingZone(null)
+    setEditedPolygonCoords(null)
+    setForm(prev => ({ ...EMPTY_FORM, color: ZONE_COLORS[(deliveryZones.length + 1) % ZONE_COLORS.length] }))
     setFormError('')
   }
 
@@ -102,6 +130,8 @@ export default function SettingsPage() {
               zones={deliveryZones}
               onZoneDrawn={handleZoneDrawn}
               onZoneClick={handleZoneClick}
+              editingZone={editingZone}
+              onPolygonEdited={setEditedPolygonCoords}
             />
           </div>
         </div>
@@ -113,11 +143,11 @@ export default function SettingsPage() {
           <div className="sp-card">
             <div className="sp-card-head">
               <h2 className="sp-card-title">
-                {pendingPolygon ? '✅ Polígono dibujado' : '📍 Nueva zona'}
+                {editingZone ? '✏️ Editando zona' : pendingPolygon ? '✅ Polígono dibujado' : '📍 Nueva zona'}
               </h2>
             </div>
 
-            {!pendingPolygon ? (
+            {(!pendingPolygon && !editingZone) ? (
               <p className="sp-hint">
                 Dibuja un polígono en el mapa para crear una zona de delivery.
               </p>
@@ -172,12 +202,25 @@ export default function SettingsPage() {
                 )}
 
                 <div className="sp-btn-row">
-                  <button className="sp-btn sp-btn--ghost" onClick={handleCancelDraw}>
-                    Cancelar
-                  </button>
-                  <button className="sp-btn sp-btn--primary" onClick={handleSaveZone}>
-                    Guardar zona
-                  </button>
+                  {editingZone ? (
+                    <>
+                      <button className="sp-btn sp-btn--ghost" onClick={handleCancelEdit}>
+                        Cancelar edición
+                      </button>
+                      <button className="sp-btn sp-btn--primary" onClick={handleSaveZone}>
+                        Guardar cambios
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="sp-btn sp-btn--ghost" onClick={handleCancelDraw}>
+                        Cancelar
+                      </button>
+                      <button className="sp-btn sp-btn--primary" onClick={handleSaveZone}>
+                        Guardar zona
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -208,13 +251,23 @@ export default function SettingsPage() {
                       <span className="sp-zone-name">{zone.name}</span>
                       <span className="sp-zone-price">{fmt(zone.price)} / delivery</span>
                     </div>
-                    <button
-                      className="sp-zone-del"
-                      title="Eliminar zona"
-                      onClick={e => { e.stopPropagation(); handleDeleteZone(zone.id) }}
-                    >
-                      ×
-                    </button>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        className="sp-zone-edit"
+                        title="Editar zona"
+                        onClick={e => { e.stopPropagation(); handleEditZone(zone) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--muted)' }}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="sp-zone-del"
+                        title="Eliminar zona"
+                        onClick={e => { e.stopPropagation(); handleDeleteZone(zone.id) }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -24,7 +24,7 @@ const ZONE_COLORS = [
 const BUIN_CENTER = { lat: -33.732, lng: -70.742 }
 const DEFAULT_ZOOM = 14
 
-export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick }) {
+export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick, editingZone, onPolygonEdited }) {
   const [loaded, setLoaded] = useState(() => !!(window.google && window.google.maps))
 
   // Escuchar si cargó asíncronamente
@@ -134,11 +134,16 @@ export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick }) {
     zones.forEach(zone => {
       if (!zone.polygon || zone.polygon.length < 3) return
 
+      const isEditing = editingZone?.id === zone.id
+
       if (zonePolygons.current[zone.id]) {
         // Actualizar color si cambió
         zonePolygons.current[zone.id].setOptions({
           fillColor: zone.color,
           strokeColor: zone.color,
+          editable: isEditing,
+          draggable: isEditing,
+          zIndex: isEditing ? 100 : 1
         })
       } else {
         // Crear nuevo polígono en el mapa
@@ -148,8 +153,9 @@ export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick }) {
           fillOpacity: 0.25,
           strokeColor: zone.color,
           strokeWeight: 2,
-          editable: false,
-          draggable: false,
+          editable: isEditing,
+          draggable: isEditing,
+          zIndex: isEditing ? 100 : 1
         })
         poly.setMap(mapInstance.current)
 
@@ -160,8 +166,28 @@ export default function DeliveryMap({ zones = [], onZoneDrawn, onZoneClick }) {
 
         zonePolygons.current[zone.id] = poly
       }
+
+      const poly = zonePolygons.current[zone.id]
+      const path = poly.getPath()
+
+      window.google.maps.event.clearListeners(path, 'set_at')
+      window.google.maps.event.clearListeners(path, 'insert_at')
+      window.google.maps.event.clearListeners(path, 'remove_at')
+
+      if (isEditing) {
+        const updateCoords = () => {
+          const coords = path.getArray().map(latlng => ({
+            lat: latlng.lat(),
+            lng: latlng.lng(),
+          }))
+          if (onPolygonEdited) onPolygonEdited(coords)
+        }
+        path.addListener('set_at', updateCoords)
+        path.addListener('insert_at', updateCoords)
+        path.addListener('remove_at', updateCoords)
+      }
     })
-  }, [loaded, zones, onZoneClick])
+  }, [loaded, zones, onZoneClick, editingZone, onPolygonEdited])
 
   /* ── Render ── */
 
