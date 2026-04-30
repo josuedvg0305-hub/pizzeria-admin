@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useClients } from '../../context/ClientContext';
 import ClientSearchModal from './ClientSearchModal';
 import ClientFilterModal from './ClientFilterModal';
@@ -30,8 +30,12 @@ export default function ClientsPage() {
   const [showIEMenu, setShowIEMenu] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+
   // Simple filter logic mapping
-  const displayedClients = [...clients].filter(c => {
+  const filteredClients = [...clients].filter(c => {
     // Top pills
     if (activeFilter !== 'Todos' && c.segment !== activeFilter) return false;
     
@@ -44,7 +48,7 @@ export default function ClientsPage() {
   });
 
   if (sortConfig.key) {
-    displayedClients.sort((a, b) => {
+    filteredClients.sort((a, b) => {
       let aVal = a[sortConfig.key];
       let bVal = b[sortConfig.key];
       if (typeof aVal === 'string') aVal = aVal.toLowerCase();
@@ -55,6 +59,17 @@ export default function ClientsPage() {
       return 0;
     });
   }
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, advFilters, sortConfig, clients]);
+
+  // Pagination math
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -230,7 +245,7 @@ export default function ClientsPage() {
         </div>
 
         <div className="cp-filters-right">
-          Total de clientes: {displayedClients.length}
+          Total de clientes: {filteredClients.length}
         </div>
       </div>
 
@@ -253,12 +268,12 @@ export default function ClientsPage() {
           </div>
 
           <div className="cp-grid-body">
-            {displayedClients.length === 0 ? (
+            {currentClients.length === 0 ? (
               <div style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>
                 No hay clientes para este criterio.
               </div>
             ) : (
-              displayedClients.map(client => (
+              currentClients.map(client => (
                 <div key={client.id} className="cp-grid-row" onClick={() => { setEditingClient(client); setIsDrawerOpen(true); }} style={{ cursor: 'pointer' }}>
                   
                   {/* Cliente */}
@@ -303,6 +318,43 @@ export default function ClientsPage() {
                 </div>
               ))
             )}
+          </div>
+
+          {/* ── Pagination Footer ── */}
+          <div className="flex justify-between items-center py-4 text-sm text-[var(--muted)] border-t border-[var(--border)]">
+            <div className="flex items-center gap-2">
+              <span>Elementos por página:</span>
+              <select 
+                className="bg-transparent border border-[var(--border)] rounded px-1 py-0.5 outline-none focus:border-[var(--brand)] transition-colors"
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button 
+                className="cp-btn cp-btn-ghost px-3 py-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => prev - 1)}
+              >
+                ← Anterior
+              </button>
+              <span>Página {currentPage} de {totalPages || 1}</span>
+              <button 
+                className="cp-btn cp-btn-ghost px-3 py-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+              >
+                Siguiente →
+              </button>
+            </div>
           </div>
 
         </div>
