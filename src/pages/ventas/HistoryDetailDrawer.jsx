@@ -44,6 +44,35 @@ export default function HistoryDetailDrawer({ order, onClose, onUpdateOrder }) {
     return (order.items || []).reduce((sum, item) => sum + item.total, 0);
   };
 
+  const getPriceBreakdown = () => {
+    const subtotal = getSubtotal();
+    const charges = order.charges || {};
+
+    const computedDiscount = order.discountMode === '%'
+      ? Math.round(subtotal * (Number(order.discountVal) || 0) / 100)
+      : (Number(order.discountVal) || 0);
+
+    const discount = Number(order.discount) || computedDiscount;
+    const subtotalNet = Math.max(0, subtotal - discount);
+
+    const delivery = Number(charges.delivery ?? order.delivery ?? order.deliveryFee) || 0;
+    const tip = charges.tipMode === '%'
+      ? Math.round(subtotalNet * (Number(charges.tipVal) || 0) / 100)
+      : (Number(charges.tipVal) || Number(order.tip) || 0);
+    const servicio = Number(charges.servicio) || 0;
+    const empaque = Number(charges.empaque) || 0;
+
+    return { subtotal, discount, delivery, tip, servicio, empaque };
+  };
+
+  const breakdown = getPriceBreakdown();
+  const hasExtras =
+    breakdown.discount > 0 ||
+    breakdown.delivery > 0 ||
+    breakdown.tip > 0 ||
+    breakdown.servicio > 0 ||
+    breakdown.empaque > 0;
+
   const hasPayment = !!(order.paymentMethod || order.payMethod);
 
   const handleDeletePayment = () => {
@@ -134,10 +163,45 @@ export default function HistoryDetailDrawer({ order, onClose, onUpdateOrder }) {
             <div className="hdd-footer">
               <div className="hdd-footer-subtotal">
                 <span>Subtotal</span>
-                <span>{fmt(getSubtotal())}</span>
+                <span>{fmt(breakdown.subtotal)}</span>
               </div>
               
-              <div className="hdd-footer-total-row">
+              {hasExtras && (
+                <div className="hdd-footer-extras">
+                  {breakdown.discount > 0 && (
+                    <div className="hdd-footer-extra-row">
+                      <span>Descuento</span>
+                      <span>-{fmt(breakdown.discount)}</span>
+                    </div>
+                  )}
+                  {breakdown.delivery > 0 && (
+                    <div className="hdd-footer-extra-row">
+                      <span>Delivery</span>
+                      <span>{fmt(breakdown.delivery)}</span>
+                    </div>
+                  )}
+                  {breakdown.tip > 0 && (
+                    <div className="hdd-footer-extra-row">
+                      <span>Propina</span>
+                      <span>{fmt(breakdown.tip)}</span>
+                    </div>
+                  )}
+                  {breakdown.servicio > 0 && (
+                    <div className="hdd-footer-extra-row">
+                      <span>Servicio</span>
+                      <span>{fmt(breakdown.servicio)}</span>
+                    </div>
+                  )}
+                  {breakdown.empaque > 0 && (
+                    <div className="hdd-footer-extra-row">
+                      <span>Empaque</span>
+                      <span>{fmt(breakdown.empaque)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className={`hdd-footer-total-row${hasExtras ? ' hdd-footer-total-row--with-divider' : ''}`}>
                 {order.paid ? (
                   <span className="hdd-paid-badge hdd-paid-badge--yes">✓ Pagado</span>
                 ) : (

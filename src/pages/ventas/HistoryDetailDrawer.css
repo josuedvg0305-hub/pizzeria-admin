@@ -398,11 +398,32 @@
   font-weight: 500;
 }
 
+.hdd-footer-extras {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hdd-footer-extra-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .hdd-footer-total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 4px;
+}
+
+.hdd-footer-total-row--with-divider {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 .hdd-paid-badge {
