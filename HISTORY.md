@@ -70,3 +70,13 @@ Este archivo conserva el registro histórico de sesiones, refactorizaciones y de
 - **Pagos Mixtos (Split Payments):** Se cambió la nomenclatura "Débito" por "Tarjeta". Se añadió soporte para pagar un pedido combinando métodos. Se agregó la columna `payments` (JSONB) en Supabase. Se filtró el payload de guardado para evitar rechazos por la columna fantasma `tip`.
 - **Filtros de Historial:** Se reescribió la matemática de `HistorialPage.jsx` para que, al filtrar por método de pago, "abra" los pedidos mixtos y sume en el header únicamente la fracción pagada con ese método específico.
 - **UX de Impresión y UI:** Se agrandó el botón de impresión en el detalle, se agregó un atajo de impresión directo en el `OrderRow`, y se reemplazó el botón "Cobrar" por un texto verde de "✓ Pagado" para evitar saltos en la interfaz.
+
+---
+
+## Sesión del 29 de Abril 2026 - UX, Mapas Interactivos y Master Canvas
+
+- **Paginación de Clientes:** Se implementó paginación local (client-side) en `ClientsPage.jsx` con selector de 20, 50 y 100 ítems por página para mejorar el rendimiento.
+- **UX Historial de Pedidos:** Se eliminó el botón "Buscar" manual para activar un auto-fetch al cambiar fechas. Se eliminaron filtros inactivos ("Día entero", "Creación") por YAGNI y se agregó un buscador de texto en vivo (por Nombre, Teléfono o N° Pedido).
+- **Resumen de Caja (Corte X):** En el Historial, se implementó un panel desplegable financiero que calcula y separa métricas clave: Total Productos vs Total Delivery, desglose exacto por Método de Pago (Efectivo, Tarjeta, Transferencia incluyendo pagos mixtos) y volumen de pedidos.
+- **Edición de Zonas (Google Maps):** En `SettingsPage.jsx`, se integró la API nativa para permitir que los polígonos de zonas existentes pasen a modo edición (`editable: true`), capturando sus nuevos vértices (`insert_at`, `set_at`) y guardándolos en la base de datos. Se agregó scroll vertical a la lista de zonas para evitar desbordes visuales.
+- **Layout Master Canvas (Reportes):** Se resolvió el conflicto de solapamiento visual con el Sidebar en `ReportesPage.jsx` implementando un patrón de "Master Canvas". Se encapsuló el dashboard en un contenedor principal forzando el scroll (`overflow-y-auto`) y aislando el layout interno.

@@ -13,6 +13,7 @@ Lee este archivo completo antes de escribir cualquier código. Contiene el stack
 - **Supabase** — backend, base de datos PostgreSQL, autenticación, persistencia y realtime para módulos conectados.
 
 **Regla de Estilos:** El proyecto utiliza Tailwind CSS como estándar principal para todo el diseño de la interfaz. Todas las nuevas vistas, refactorizaciones y componentes DEBEN utilizar exclusivamente clases de utilidad de Tailwind (ej. flex, p-4, text-gray-800). NO se deben crear nuevos archivos .css separados a menos que sea para configuraciones globales del framework o animaciones extremadamente complejas que Tailwind no pueda manejar.
+**Regla de Layout (Reportes):** La vista de Reportes utiliza un patrón de Master Canvas aislado con scroll propio para evitar conflictos de Layout con el Sidebar fijo.
 
 ---
 
