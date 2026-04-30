@@ -90,12 +90,20 @@ function getPrevRange(value, customStart, customEnd) {
     return { start: new Date(y, 0, 1, 0, 0, 0, 0), end: new Date(y, 11, 31, 23, 59, 59, 999) }
   }
 
-  // Contar días calendario exactos (sin usar ms para evitar drift de DST)
-  const msPerDay = 86_400_000
-  const spanDays = Math.round((ce - cs) / msPerDay) + 1 // días inclusivos
+  const csDay = new Date(cs); csDay.setHours(0, 0, 0, 0)
+  const ceDay = new Date(ce); ceDay.setHours(0, 0, 0, 0)
+  const spanDays = Math.round((ceDay - csDay) / 86_400_000) + 1
 
-  // Período anterior: termina el día antes del inicio del período actual
-  const pe = new Date(cs); pe.setDate(pe.getDate() - 1); pe.setHours(23, 59, 59, 999)
+  // Para rangos de un solo dia, comparar contra el mismo dia de la semana anterior.
+  // Ej: "Ayer" miercoles 29 => miercoles 22, no martes 28.
+  if (spanDays === 1) {
+    const ps = addDays(csDay, -7); ps.setHours(0, 0, 0, 0)
+    const pe = addDays(ps, 0); pe.setHours(ce.getHours(), ce.getMinutes(), ce.getSeconds(), ce.getMilliseconds())
+    return { start: ps, end: pe }
+  }
+
+  // Periodo anterior continuo, con el mismo numero de dias calendario locales.
+  const pe = addDays(csDay, -1); pe.setHours(23, 59, 59, 999)
   const ps = addDays(pe, -(spanDays - 1)); ps.setHours(0, 0, 0, 0)
   return { start: ps, end: pe }
 }
@@ -171,6 +179,16 @@ function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
 
   const { start: cs, end: ce } = getRange(value, cStart, cEnd)
   const { start: ps }          = getPrevRange(value, cStart, cEnd)
+  const startOfLocalDay = (date) => {
+    const d = new Date(date)
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+  const calendarDayDiff = (from, to) => {
+    const a = startOfLocalDay(from)
+    const b = startOfLocalDay(to)
+    return Math.round((b - a) / 86_400_000)
+  }
 
   // ── MODE: año → agrupar por mes ─────────────────────────────────────────
   if (value === 'year') {
@@ -195,14 +213,20 @@ function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
 
   // ── MODE: hoy → agrupar por hora ────────────────────────────────────────
   if (value === '0') {
+    const currDayKey = localDateStr(cs)
+    const prevDayKey = localDateStr(ps)
     const currMap = {}
     currOrders.forEach(o => {
-      const h = new Date(o.created_at).getHours()
+      const d = new Date(o.created_at)
+      if (localDateStr(d) !== currDayKey) return
+      const h = d.getHours()
       currMap[h] = (currMap[h] ?? 0) + (o.total ?? 0)
     })
     const prevMap = {}
     prevOrders.forEach(o => {
-      const h = new Date(o.created_at).getHours()
+      const d = new Date(o.created_at)
+      if (localDateStr(d) !== prevDayKey) return
+      const h = d.getHours()
       prevMap[h] = (prevMap[h] ?? 0) + (o.total ?? 0)
     })
     const nowHour = new Date().getHours()
@@ -218,15 +242,14 @@ function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
   const prevMap = buildDailyMap(prevOrders)
   const result  = []
 
-  const cur = new Date(cs); cur.setHours(0, 0, 0, 0)
-  const psDay = new Date(ps); psDay.setHours(0, 0, 0, 0)
+  const cur = startOfLocalDay(cs)
+  const csDay = startOfLocalDay(cs)
+  const ceDay = startOfLocalDay(ce)
+  const psDay = startOfLocalDay(ps)
 
-  while (cur <= ce) {
+  while (cur <= ceDay) {
     const currKey  = localDateStr(cur)
-    // Offset exacto en días calendario desde el inicio del período actual
-    const offsetMs  = cur.getTime() - new Date(cs.getFullYear(), cs.getMonth(), cs.getDate()).getTime()
-    const offsetDays = Math.round(offsetMs / 86_400_000)
-    // Fecha equivalente en el período anterior
+    const offsetDays = calendarDayDiff(csDay, cur)
     const prevDay  = addDays(psDay, offsetDays)
     const prevKey  = localDateStr(prevDay)
 
