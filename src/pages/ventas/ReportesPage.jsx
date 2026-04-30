@@ -447,6 +447,16 @@ export default function ReportesPage() {
 
   const periodLabel = RANGE_OPTIONS.find(o => o.value === range)?.label ?? ''
 
+  const handleCustomStartChange = (newStart) => {
+    setCustomStart(newStart)
+    if (newStart > customEnd) setCustomEnd(newStart)
+  }
+
+  const handleCustomEndChange = (newEnd) => {
+    setCustomEnd(newEnd)
+    if (newEnd < customStart) setCustomStart(newEnd)
+  }
+
   const handleApply = () => {
     setApplied({ s: customStart, e: customEnd })
     fetchData('custom', customStart, customEnd)
@@ -492,14 +502,14 @@ export default function ReportesPage() {
             {range === 'custom' && (
               <>
                 <input
-                  type="date" value={customStart} max={customEnd}
-                  onChange={e => setCustomStart(e.target.value)}
+                  type="date" value={customStart} max={today}
+                  onChange={e => handleCustomStartChange(e.target.value)}
                   className="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 hover:border-gray-300 transition-colors"
                 />
                 <span className="text-gray-400 text-sm font-medium">→</span>
                 <input
-                  type="date" value={customEnd} min={customStart} max={today}
-                  onChange={e => setCustomEnd(e.target.value)}
+                  type="date" value={customEnd} max={today}
+                  onChange={e => handleCustomEndChange(e.target.value)}
                   className="bg-white border border-gray-200 text-gray-700 text-sm rounded-xl px-3 py-2.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 hover:border-gray-300 transition-colors"
                 />
                 <button
