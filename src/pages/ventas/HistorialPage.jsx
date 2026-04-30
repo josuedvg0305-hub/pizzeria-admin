@@ -61,6 +61,7 @@ export default function HistorialPage() {
   const [historicalOrders, setHistoricalOrders] = useState([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [searchQuery,   setSearchQuery]   = useState('')
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
 
   const fetchHistoricalData = async (start = null, end = null) => {
     setLoadingHistory(true)
@@ -265,6 +266,48 @@ export default function HistorialPage() {
     }
   }, [displayed, salesFilters.payMethod])
 
+  /* Cash Summary — financial breakdown of the currently displayed orders */
+  const cashSummary = useMemo(() => {
+    const valid = displayed.filter(o => !o.deleted && o.status !== 'cancelado')
+
+    let totalDelivery  = 0
+    let totalProductos = 0
+    let totalGeneral   = 0
+    const pedidosPorTipo      = {}
+    const ingresosPorMetodo   = { Efectivo: 0, Tarjeta: 0, Transferencia: 0 }
+
+    valid.forEach(o => {
+      const delivery = Number(o.charges?.delivery) || 0
+      const total    = Number(o.total) || 0
+
+      totalDelivery  += delivery
+      totalProductos += total - delivery
+      totalGeneral   += total
+
+      // Volume by type
+      const tipo = o.type ?? 'otro'
+      pedidosPorTipo[tipo] = (pedidosPorTipo[tipo] || 0) + 1
+
+      // Revenue by payment method — split-payment aware
+      const canonical = (o.paymentMethod ?? o.payMethod ?? '').toLowerCase()
+      if (canonical === 'mixto' && Array.isArray(o.payments) && o.payments.length > 0) {
+        o.payments.forEach(p => {
+          const key = p.method ?? ''
+          if (key in ingresosPorMetodo) {
+            ingresosPorMetodo[key] += Number(p.amount) || 0
+          }
+        })
+      } else {
+        const methodKey = Object.keys(ingresosPorMetodo).find(
+          k => k.toLowerCase() === canonical
+        )
+        if (methodKey) ingresosPorMetodo[methodKey] += total
+      }
+    })
+
+    return { totalDelivery, totalProductos, totalGeneral, pedidosPorTipo, ingresosPorMetodo, count: valid.length }
+  }, [displayed])
+
   /* Exportation to CSV (Excel) */
   const handleExportExcel = () => {
     if (displayed.length === 0) {
@@ -460,7 +503,16 @@ export default function HistorialPage() {
 
         <div className="hp-st-spacer"></div>
 
-        <button className="btn btn-blue hp-resumen-btn">Resumen de caja ▾</button>
+        <button
+          className="btn btn-blue hp-resumen-btn flex items-center gap-1.5"
+          onClick={() => setIsSummaryOpen(prev => !prev)}
+        >
+          Resumen de caja
+          <span
+            className="inline-block transition-transform duration-200"
+            style={{ transform: isSummaryOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+          >▾</span>
+        </button>
 
         <div className="hp-st-summary">
           <span className="!text-base">Pedidos: {summary.count}</span>
@@ -468,6 +520,67 @@ export default function HistorialPage() {
           <IconEye />
         </div>
       </div>
+
+      {/* ── Cash Summary Accordion ── */}
+      {isSummaryOpen && (
+        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Col 1 — Ingresos */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ingresos</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm text-gray-500">Productos / Servicio</span>
+                <span className="text-base font-bold text-gray-800">{fmt(cashSummary.totalProductos)}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm text-gray-500">Delivery</span>
+                <span className="text-base font-bold text-gray-800">{fmt(cashSummary.totalDelivery)}</span>
+              </div>
+              <div className="flex justify-between items-baseline border-t border-gray-100 pt-3">
+                <span className="text-sm font-semibold text-gray-700">Gran Total</span>
+                <span className="text-lg font-extrabold" style={{ color: 'var(--brand)' }}>{fmt(cashSummary.totalGeneral)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Col 2 — Métodos de Pago */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Métodos de Pago</p>
+            <div className="space-y-3">
+              {Object.entries(cashSummary.ingresosPorMetodo).map(([method, amount]) => (
+                <div key={method} className="flex justify-between items-baseline">
+                  <span className="text-sm text-gray-500">{method}</span>
+                  <span className={`text-base font-bold ${amount > 0 ? 'text-gray-800' : 'text-gray-300'}`}>
+                    {fmt(amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Col 3 — Volumen de Pedidos */}
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Volumen</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm font-semibold text-gray-700">Total Pedidos</span>
+                <span className="text-lg font-extrabold text-gray-800">{cashSummary.count}</span>
+              </div>
+              {Object.entries(cashSummary.pedidosPorTipo)
+                .sort((a, b) => b[1] - a[1])
+                .map(([tipo, count]) => (
+                  <div key={tipo} className="flex justify-between items-baseline">
+                    <span className="text-sm text-gray-500">{TYPE_LABEL[tipo] ?? tipo}</span>
+                    <span className="text-base font-bold text-gray-800">{count}</span>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+        </div>
+      )}
 
       {/* ── Main content (Data Grid) ── */}
       <div className="hp-content">
