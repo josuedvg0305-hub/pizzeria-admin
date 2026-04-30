@@ -242,7 +242,7 @@ function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 const SkeletonCard = () => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 animate-pulse">
+  <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6 animate-pulse">
     <div className="h-3 w-28 bg-gray-200 rounded mb-4" />
     <div className="h-9 w-36 bg-gray-200 rounded mb-3" />
     <div className="h-5 w-24 bg-gray-100 rounded" />
@@ -269,7 +269,7 @@ function Delta({ val, size='sm' }) {
 
 function KpiCard({ label, icon, value, delta }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-500">{label}</span>
         <span className="text-xl opacity-40">{icon}</span>
@@ -287,7 +287,7 @@ function KpiCard({ label, icon, value, delta }) {
 
 function SectionCard({ title, children, className='' }) {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-6 ${className}`}>
+    <div className={`bg-slate-50 rounded-2xl border border-slate-100 p-6 ${className}`}>
       {title && <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">{title}</h2>}
       {children}
     </div>
@@ -431,8 +431,11 @@ export default function ReportesPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="ml-[260px] h-screen overflow-y-auto bg-slate-100 p-6 md:p-8">
-      <div className="w-full max-w-7xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-200 p-6 md:p-8 flex flex-col gap-8">
+    <main className="ml-[260px] min-h-screen bg-slate-100 overflow-y-auto">
+      <div className="p-6 md:p-8">
+        <div className="mx-auto w-full max-w-7xl">
+          <section className="rounded-[2rem] border border-slate-200 bg-white shadow-xl p-6 md:p-8">
+            <div className="flex flex-col gap-8">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-wrap justify-between items-center gap-4">
@@ -700,8 +703,11 @@ export default function ReportesPage() {
           )}
         </SectionCard>
 
-        <div className="h-2" />
+              <div className="h-2" />
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }
