@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useMenu } from '../../context/MenuContext'
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, Label,
+  CartesianGrid, Tooltip, PieChart, Pie, Cell, Label,
 } from 'recharts'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -264,6 +265,129 @@ function computeComparativeData(currOrders, prevOrders, value, cStart, cEnd) {
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
+function getProductId(item) {
+  const raw = item?.productId ?? item?.product_id ?? item?.product?.id
+  if (raw !== null && raw !== undefined && raw !== '') return String(raw)
+
+  // Legacy seed items used the menu product ID directly in `id`.
+  const legacy = item?.id
+  if (typeof legacy === 'number') return String(legacy)
+  if (typeof legacy === 'string' && /^\d+$/.test(legacy)) return legacy
+  return null
+}
+
+function getOrderItems(order) {
+  if (Array.isArray(order?.cart)) return order.cart
+  if (Array.isArray(order?.items)) return order.items
+  return []
+}
+
+function buildDateColumns(value, cStart, cEnd) {
+  const { start, end } = getRange(value, cStart, cEnd)
+  const startDay = new Date(start); startDay.setHours(0, 0, 0, 0)
+  const endDay = new Date(end); endDay.setHours(0, 0, 0, 0)
+  const cols = []
+  const cur = new Date(startDay)
+
+  while (cur <= endDay) {
+    cols.push({
+      key: localDateStr(cur),
+      label: `${DAY_NAMES[cur.getDay()]} ${cur.getDate()}`,
+    })
+    cur.setDate(cur.getDate() + 1)
+  }
+
+  return cols
+}
+
+function buildProductLookup(menuCategories) {
+  return (menuCategories ?? []).reduce((acc, category) => {
+    ;(category.products ?? []).forEach(product => {
+      acc[String(product.id)] = {
+        name: product.name,
+        category: category.name ?? 'Sin categoría',
+      }
+    })
+    return acc
+  }, {})
+}
+
+function useProductAnalytics(currentOrders, menuCategories, value, cStart, cEnd) {
+  return useMemo(() => {
+    const dateColumns = buildDateColumns(value, cStart, cEnd)
+    const productLookup = buildProductLookup(menuCategories)
+    const productRows = new Map()
+    const topMap = new Map()
+    const categorySet = new Set()
+    let totalUnits = 0
+
+    currentOrders.forEach(order => {
+      const dayKey = localDateStr(new Date(order.created_at ?? order.createdAt))
+
+      getOrderItems(order).forEach(item => {
+        if (item?.isModifier === true || item?.is_modifier === true) return
+
+        const productId = getProductId(item)
+        if (!productId) return
+
+        const qty = Number(item?.cantidad ?? item?.qty ?? item?.quantity ?? 0)
+        if (!Number.isFinite(qty) || qty <= 0) return
+
+        const lookup = productLookup[productId]
+        const name = item?.nombre ?? item?.name ?? lookup?.name ?? 'Producto sin nombre'
+        const category = (
+          item?.categoria ??
+          item?.categoryName ??
+          item?.category_name ??
+          item?.category ??
+          lookup?.category ??
+          'Sin categoría'
+        )
+
+        const rowKey = `${category}::${name}`
+        if (!productRows.has(rowKey)) {
+          productRows.set(rowKey, {
+            key: rowKey,
+            productId,
+            name,
+            category,
+            byDate: {},
+            total: 0,
+            share: 0,
+          })
+        }
+
+        const row = productRows.get(rowKey)
+        row.byDate[dayKey] = (row.byDate[dayKey] ?? 0) + qty
+        row.total += qty
+        totalUnits += qty
+        categorySet.add(category)
+
+        const top = topMap.get(name) ?? { name, qty: 0 }
+        top.qty += qty
+        topMap.set(name, top)
+      })
+    })
+
+    const rows = Array.from(productRows.values())
+      .map(row => ({
+        ...row,
+        share: totalUnits > 0 ? (row.total / totalUnits) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'es'))
+
+    return {
+      dateColumns,
+      categories: Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'es')),
+      rows,
+      topProducts: Array.from(topMap.values())
+        .sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name, 'es'))
+        .slice(0, 10),
+      totalUnits,
+    }
+  }, [currentOrders, menuCategories, value, cStart, cEnd])
+}
+
 const SkeletonCard = () => (
   <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6 animate-pulse">
     <div className="h-3 w-28 bg-gray-200 rounded mb-4" />
@@ -391,8 +515,147 @@ function DonutCenter({ viewBox, total }) {
 }
 
 // ─── Componente principal ──────────────────────────────────────────────────
+const fmtUnits = (n) =>
+  Number(n ?? 0).toLocaleString('es-CL', {
+    maximumFractionDigits: Number.isInteger(Number(n ?? 0)) ? 0 : 1,
+  })
+
+function TopProductsCard({ products, loading }) {
+  return (
+    <div className="h-full rounded-2xl border border-slate-200 bg-white p-5">
+      <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-5">
+        Top 10 Productos Más Vendidos
+      </h2>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-9 rounded-lg bg-slate-100 animate-pulse" />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <EmptyState label="Sin productos vendidos en este período" />
+      ) : (
+        <ol className="divide-y divide-slate-100">
+          {products.map((product, index) => (
+            <li key={`${product.name}-${index}`} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500">
+                {index + 1}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
+                {product.name}
+              </span>
+              <span className="shrink-0 text-sm font-bold text-slate-900">
+                {fmtUnits(product.qty)} unid.
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
+
+function ProductCategoryMatrix({ analytics, selectedCategory, onCategoryChange, loading }) {
+  const activeCategory = analytics.categories.includes(selectedCategory)
+    ? selectedCategory
+    : analytics.categories[0] || ''
+  const rows = analytics.rows.filter(row => row.category === activeCategory)
+
+  return (
+    <div className="h-full rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          Análisis de Rendimiento por Categoría
+        </h2>
+        <select
+          value={activeCategory}
+          onChange={e => onCategoryChange(e.target.value)}
+          disabled={loading || analytics.categories.length === 0}
+          className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 outline-none transition-colors hover:border-slate-300 focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-60 md:w-56"
+        >
+          {analytics.categories.length === 0 ? (
+            <option value="">Sin categorías</option>
+          ) : (
+            analytics.categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))
+          )}
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-10 rounded-lg bg-slate-100 animate-pulse" />
+          ))}
+        </div>
+      ) : analytics.totalUnits === 0 ? (
+        <EmptyState label="Sin productos vendidos en este período" />
+      ) : rows.length === 0 ? (
+        <EmptyState label="Sin productos para esta categoría" />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+          <table className="w-full min-w-max text-sm">
+            <thead className="bg-slate-50">
+              <tr className="border-b border-slate-200">
+                <th className="sticky left-0 z-20 min-w-[220px] bg-slate-50 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Producto
+                </th>
+                {analytics.dateColumns.map(day => (
+                  <th key={day.key} className="min-w-[72px] px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    {day.label}
+                  </th>
+                ))}
+                <th
+                  className="sticky z-20 min-w-[72px] bg-slate-50 px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500"
+                  style={{ right: 72 }}
+                >
+                  Total
+                </th>
+                <th
+                  className="sticky right-0 z-20 min-w-[72px] bg-slate-50 px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500"
+                >
+                  %
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map(row => (
+                <tr key={row.key} className="hover:bg-slate-50/70">
+                  <td className="sticky left-0 z-10 min-w-[220px] bg-white px-4 py-3 font-semibold text-slate-800">
+                    <span className="block max-w-[260px] truncate">{row.name}</span>
+                  </td>
+                  {analytics.dateColumns.map(day => {
+                    const value = row.byDate[day.key] ?? 0
+                    return (
+                      <td key={`${row.key}-${day.key}`} className="px-3 py-3 text-right font-medium text-slate-700">
+                        {value > 0 ? fmtUnits(value) : <span className="text-slate-300">0</span>}
+                      </td>
+                    )
+                  })}
+                  <td
+                    className="sticky z-10 bg-white px-3 py-3 text-right font-bold text-slate-900"
+                    style={{ right: 72 }}
+                  >
+                    {fmtUnits(row.total)}
+                  </td>
+                  <td className="sticky right-0 z-10 bg-white px-4 py-3 text-right font-bold text-slate-500">
+                    {row.share.toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ReportesPage() {
   const today = localDateStr(new Date())
+  const { categories: menuCategories } = useMenu()
 
   const [range,       setRange]       = useState('7')
   const [customStart, setCustomStart] = useState(today)
@@ -402,6 +665,7 @@ export default function ReportesPage() {
   const [prevOrders,  setPrevOrders]  = useState([])
   const [loading,     setLoading]     = useState(true)
   const [error,       setError]       = useState(null)
+  const [selectedProductCategory, setSelectedProductCategory] = useState('')
 
   const fetchData = useCallback(async (rv, cs, ce) => {
     setLoading(true); setError(null)
@@ -429,8 +693,9 @@ export default function ReportesPage() {
 
   // Re-fetch cuando cambia range (excepto custom — espera botón Aplicar)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch owns loading/orders state.
     if (range !== 'custom') fetchData(range, customStart, customEnd)
-  }, [range, fetchData])
+  }, [range, customStart, customEnd, fetchData])
 
   // ── Derivados ─────────────────────────────────────────────────────────────
   const kpis     = useMemo(() => computeKPIs(orders),     [orders])
@@ -440,6 +705,7 @@ export default function ReportesPage() {
     () => computeComparativeData(orders, prevOrders, range, applied.s, applied.e),
     [orders, prevOrders, range, applied]
   )
+  const productAnalytics = useProductAnalytics(orders, menuCategories, range, applied.s, applied.e)
 
   const dOrders = useMemo(() => pct(kpis.totalOrders, prevKpis.totalOrders), [kpis, prevKpis])
   const dSales  = useMemo(() => pct(kpis.totalSales,  prevKpis.totalSales),  [kpis, prevKpis])
@@ -735,6 +1001,23 @@ export default function ReportesPage() {
             </div>
           )}
         </SectionCard>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8 border-t border-slate-200 pt-8">
+          <div className="col-span-1 lg:col-span-2">
+            <ProductCategoryMatrix
+              analytics={productAnalytics}
+              selectedCategory={selectedProductCategory}
+              onCategoryChange={setSelectedProductCategory}
+              loading={loading}
+            />
+          </div>
+          <div className="col-span-1">
+            <TopProductsCard
+              products={productAnalytics.topProducts}
+              loading={loading}
+            />
+          </div>
+        </div>
 
               <div className="h-2" />
             </div>
