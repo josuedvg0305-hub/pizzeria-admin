@@ -431,8 +431,8 @@ export default function ReportesPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-100 py-8 pr-8 pl-[280px]">
-      <div className="w-full bg-white rounded-[2rem] shadow-xl border border-slate-200 p-8 flex flex-col gap-8">
+    <div className="ml-[260px] h-screen overflow-y-auto bg-slate-100 p-6 md:p-8">
+      <div className="w-full max-w-7xl mx-auto bg-white rounded-[2rem] shadow-xl border border-slate-200 p-6 md:p-8 flex flex-col gap-8">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-wrap justify-between items-center gap-4">
