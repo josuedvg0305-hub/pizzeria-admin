@@ -431,11 +431,11 @@ export default function ReportesPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full min-h-screen bg-[var(--surface2)] pl-[280px] pt-24 pr-8 pb-8">
-      <div className="max-w-7xl mx-auto flex flex-col gap-6">
+    <div className="min-h-screen bg-slate-100 py-8 pr-8 pl-[280px]">
+      <div className="w-full bg-white rounded-3xl shadow-lg border border-gray-200 p-6 md:p-8 flex flex-col gap-6">
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-wrap justify-between items-center gap-4">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Reportes</h1>
             <p className="text-sm text-gray-400 mt-0.5">
