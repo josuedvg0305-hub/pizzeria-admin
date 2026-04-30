@@ -80,3 +80,13 @@ Este archivo conserva el registro histórico de sesiones, refactorizaciones y de
 - **Resumen de Caja (Corte X):** En el Historial, se implementó un panel desplegable financiero que calcula y separa métricas clave: Total Productos vs Total Delivery, desglose exacto por Método de Pago (Efectivo, Tarjeta, Transferencia incluyendo pagos mixtos) y volumen de pedidos.
 - **Edición de Zonas (Google Maps):** En `SettingsPage.jsx`, se integró la API nativa para permitir que los polígonos de zonas existentes pasen a modo edición (`editable: true`), capturando sus nuevos vértices (`insert_at`, `set_at`) y guardándolos en la base de datos. Se agregó scroll vertical a la lista de zonas para evitar desbordes visuales.
 - **Layout Master Canvas (Reportes):** Se resolvió el conflicto de solapamiento visual con el Sidebar en `ReportesPage.jsx` implementando un patrón de "Master Canvas". Se encapsuló el dashboard en un contenedor principal forzando el scroll (`overflow-y-auto`) y aislando el layout interno.
+
+---
+
+## Sesión del 30 de Abril 2026 - Master Canvas, BI Analytics y Planificación Fase 2
+
+- **UI/UX Reportes (Master Canvas):** Se reestructuró `ReportesPage.jsx` eliminando layouts fragmentados. Se implementó un contenedor principal (`min-h-screen`) para solucionar bugs de scroll, y se aplanaron visualmente las tarjetas internas para lograr un dashboard cohesivo.
+- **Bugfix Fechas (Evolución de Ventas):** Se corrigió un error de desfase de zona horaria (Timezone/Offset bug) en la agrupación de fechas del gráfico, logrando que los montos del "Período Anterior" coincidan exactamente con los KPIs.
+- **UX Selectores de Fecha:** Se eliminaron los bloqueos estrictos (`min`/`max`) en los inputs del calendario, implementando una auto-corrección lógica en el estado para evitar "deadlocks" de selección.
+- **Desglose de Historial:** En `HistoryDetailDrawer.jsx`, se implementó la función `getPriceBreakdown()` para renderizar condicionalmente cargos extra (Delivery, Propina, Descuentos) entre el Subtotal y el Total, igualando la precisión matemática del módulo PDV.
+- **Fase 2 (E-commerce):** Se redactó el documento `ECOMMERCE_PRD.md` estableciendo la arquitectura, flujos condicionales, integración de geolocalización y motor de WhatsApp para la futura vista de consumidor final.

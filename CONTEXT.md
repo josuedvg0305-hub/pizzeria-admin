@@ -14,6 +14,7 @@ Lee este archivo completo antes de escribir cualquier código. Contiene el stack
 
 **Regla de Estilos:** El proyecto utiliza Tailwind CSS como estándar principal para todo el diseño de la interfaz. Todas las nuevas vistas, refactorizaciones y componentes DEBEN utilizar exclusivamente clases de utilidad de Tailwind (ej. flex, p-4, text-gray-800). NO se deben crear nuevos archivos .css separados a menos que sea para configuraciones globales del framework o animaciones extremadamente complejas que Tailwind no pueda manejar.
 **Regla de Layout (Reportes):** La vista de Reportes utiliza un patrón de Master Canvas aislado con scroll propio para evitar conflictos de Layout con el Sidebar fijo.
+**Regla de UI/UX (Dashboards):** Los dashboards (ej. Reportes) utilizan el patrón 'Master Canvas' para encapsular la información y evitar conflictos con el Sidebar global.
 
 ---
 
@@ -465,6 +466,10 @@ Botón "Finalizar"  (solo cuando status === 'listo')
 
 > **Regla crítica:** cobrar ≠ finalizar. Un pedido puede estar cobrado y seguir en cocina.
 > Un pedido también puede finalizarse sin estar cobrado (para agilidad operativa).
+
+### Reglas de Negocio
+
+- Cualquier componente que muestre totales de pedidos (como en Historial) debe usar la lógica de `getPriceBreakdown` para reflejar con precisión los costos de delivery, propinas y descuentos.
 
 ### Registro express de clientes desde PDV
 
