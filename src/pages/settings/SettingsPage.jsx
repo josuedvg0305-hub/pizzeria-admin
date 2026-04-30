@@ -137,10 +137,10 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Sidebar derecho ── */}
-        <div className="sp-side-col">
+        <div className="sp-side-col flex flex-col h-full max-h-[calc(100vh-120px)]">
 
           {/* Formulario de nueva zona */}
-          <div className="sp-card">
+          <div className="sp-card shrink-0 mb-4">
             <div className="sp-card-head">
               <h2 className="sp-card-title">
                 {editingZone ? '✏️ Editando zona' : pendingPolygon ? '✅ Polígono dibujado' : '📍 Nueva zona'}
@@ -227,8 +227,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Lista de zonas guardadas */}
-          <div className="sp-card">
-            <div className="sp-card-head">
+          <div className="sp-card flex flex-col flex-1 min-h-0">
+            <div className="sp-card-head shrink-0 mb-2">
               <h2 className="sp-card-title">Zonas guardadas</h2>
               <span className="sp-badge">{deliveryZones.length}</span>
             </div>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
             {deliveryZones.length === 0 ? (
               <p className="sp-hint">Aún no hay zonas de delivery configuradas.</p>
             ) : (
-              <ul className="sp-zone-list">
+              <ul className="sp-zone-list flex-1 overflow-y-auto pr-2 custom-scrollbar">
                 {deliveryZones.map(zone => (
                   <li
                     key={zone.id}
