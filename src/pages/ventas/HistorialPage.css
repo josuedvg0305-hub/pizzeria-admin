@@ -7,6 +7,21 @@
 }
 
 /* ── Top Toolbar ── */
+@keyframes hp-fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: hp-fade-in-down 180ms ease-out;
+}
+
 .hp-top-toolbar {
   display: flex;
   align-items: center;

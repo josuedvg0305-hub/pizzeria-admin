@@ -523,60 +523,60 @@ export default function HistorialPage() {
 
       {/* ── Cash Summary Accordion ── */}
       {isSummaryOpen && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-down">
 
           {/* Col 1 — Ingresos */}
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Ingresos</p>
-            <div className="space-y-3">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-gray-500">Productos / Servicio</span>
-                <span className="text-base font-bold text-gray-800">{fmt(cashSummary.totalProductos)}</span>
-              </div>
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-gray-500">Delivery</span>
-                <span className="text-base font-bold text-gray-800">{fmt(cashSummary.totalDelivery)}</span>
-              </div>
-              <div className="flex justify-between items-baseline border-t border-gray-100 pt-3">
-                <span className="text-sm font-semibold text-gray-700">Gran Total</span>
-                <span className="text-lg font-extrabold" style={{ color: 'var(--brand)' }}>{fmt(cashSummary.totalGeneral)}</span>
-              </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">
+              INGRESOS
+            </h3>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600">Productos / Servicio</span>
+              <span className="font-semibold text-slate-800">{fmt(cashSummary.totalProductos)}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600">Delivery</span>
+              <span className="font-semibold text-slate-800">{fmt(cashSummary.totalDelivery)}</span>
+            </div>
+            <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
+              <span className="font-bold text-slate-800 text-base">Gran Total</span>
+              <span className="font-bold text-emerald-600 text-lg">{fmt(cashSummary.totalGeneral)}</span>
             </div>
           </div>
 
           {/* Col 2 — Métodos de Pago */}
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Métodos de Pago</p>
-            <div className="space-y-3">
-              {Object.entries(cashSummary.ingresosPorMetodo).map(([method, amount]) => (
-                <div key={method} className="flex justify-between items-baseline">
-                  <span className="text-sm text-gray-500">{method}</span>
-                  <span className={`text-base font-bold ${amount > 0 ? 'text-gray-800' : 'text-gray-300'}`}>
-                    {fmt(amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">
+              MÉTODOS DE PAGO
+            </h3>
+            {Object.entries(cashSummary.ingresosPorMetodo).map(([method, amount]) => (
+              <div key={method} className="flex justify-between items-center text-sm">
+                <span className="text-slate-600">{method}</span>
+                <span className={`font-semibold ${amount > 0 ? 'text-slate-800' : 'text-slate-300'}`}>
+                  {fmt(amount)}
+                </span>
+              </div>
+            ))}
           </div>
 
           {/* Col 3 — Volumen de Pedidos */}
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Volumen</p>
-            <div className="space-y-3">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm font-semibold text-gray-700">Total Pedidos</span>
-                <span className="text-lg font-extrabold text-gray-800">{cashSummary.count}</span>
-              </div>
-              {Object.entries(cashSummary.pedidosPorTipo)
-                .sort((a, b) => b[1] - a[1])
-                .map(([tipo, count]) => (
-                  <div key={tipo} className="flex justify-between items-baseline">
-                    <span className="text-sm text-gray-500">{TYPE_LABEL[tipo] ?? tipo}</span>
-                    <span className="text-base font-bold text-gray-800">{count}</span>
-                  </div>
-                ))
-              }
+          <div className="bg-slate-50 border border-slate-100 rounded-lg p-5 flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-200 pb-2">
+              VOLUMEN
+            </h3>
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-semibold text-slate-600">Total Pedidos</span>
+              <span className="font-bold text-slate-800 text-lg">{cashSummary.count}</span>
             </div>
+            {Object.entries(cashSummary.pedidosPorTipo)
+              .sort((a, b) => b[1] - a[1])
+              .map(([tipo, count]) => (
+                <div key={tipo} className="flex justify-between items-center text-sm">
+                  <span className="text-slate-600">{TYPE_LABEL[tipo] ?? tipo}</span>
+                  <span className="font-semibold text-slate-800">{count}</span>
+                </div>
+              ))
+            }
           </div>
 
         </div>
