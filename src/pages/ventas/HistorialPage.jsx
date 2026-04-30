@@ -380,12 +380,12 @@ export default function HistorialPage() {
 
     <div className="hp-page">
       {/* ── Top Toolbar ── */}
-      <div className="hp-top-toolbar">
-        <div className="hp-tt-left">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-3">
           {/* Quick Date Filters Dropdown */}
           <select 
             className="hp-select-input"
-            style={{ fontWeight: 600, color: 'var(--text-main)', marginRight: '8px' }}
+            style={{ fontWeight: 600, color: 'var(--text-main)' }}
             value={quickFilter}
             onChange={(e) => setQuickFilter(e.target.value)}
           >
@@ -399,7 +399,7 @@ export default function HistorialPage() {
 
           {/* Solo se muestran los inputs si el filtro es 'Personalizado' */}
           {quickFilter === 'custom' && (
-            <>
+            <div className="flex items-center gap-2">
               <input
                 type="date"
                 className="hp-date-input"
@@ -413,18 +413,11 @@ export default function HistorialPage() {
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
               />
-            </>
+            </div>
           )}
-
-          <select className="hp-select-input" defaultValue="all_day" style={{ marginLeft: quickFilter === 'custom' ? '8px' : '0' }}>
-            <option value="all_day">Día entero</option>
-          </select>
-          <select className="hp-select-input" defaultValue="creation">
-            <option value="creation">Creación</option>
-          </select>
         </div>
 
-        <div className="hp-tt-right">
+        <div className="flex items-center gap-3">
           <button className="btn btn-ghost btn-icon" title="Recargar" onClick={handleReload} disabled={loadingHistory}>↻</button>
 
           {/* Live search input */}
